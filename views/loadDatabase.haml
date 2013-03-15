@@ -10,7 +10,7 @@
   %form(method="post" enctype='multipart/form-data')   
     %input(type='file' name='dumpFile')    
     %br
-    %input(type='submit' value='Upload!')    
+    %input(type='submit' value='Backup einlesen')
 %br/
 - bkpInfo = getBackupInfo; 
 - unless bkpInfo and bkpInfo[:backups] 

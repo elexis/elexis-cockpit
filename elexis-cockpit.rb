@@ -1,5 +1,24 @@
-#!/usr/bin/env ruby
+vi #!/usr/bin/env ruby
 # encoding: utf-8
+
+# Elexis-Cockpit. Eine kleine auf sinatra basierend Applikation
+# um Wartungarbeiten für Elexis einfach auszuführen.
+# 
+# Copyright (C) 2013 Niklaus Giger <niklaus.giger@member.fsf.org>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 # from http://net.tutsplus.com/tutorials/ruby/singing-with-sinatra/
 # HomePage http://www.sinatrarb.com/
@@ -9,11 +28,11 @@
 # Übersetzung: https://github.com/ai/r18n https://github.com/sinefunc/sinatra-i18n
 # Beispiel unter https://github.com/ai/r18n/tree/master/sinatra-r18n
 # Progressbar https://github.com/blueimp/jQuery-File-Upload
-#   console: https://github.com/paul/progress_bar
+#  console: https://github.com/paul/progress_bar
 # https://github.com/sinefunc/sinatra-support
 # -percentage = (Time.now.to_i.modulo(500))/5
-#  %div.progress.progress-striped.active
-#   %div.bar{:style => "width: #{percentage}%;"}
+# %div.progress.progress-striped.active
+#  %div.bar{:style => "width: #{percentage}%;"}
 # http://samuelstern.wordpress.com/2012/11/28/making-a-simple-database-driven-website-with-sinatra-and-heroku/
 # http://guides.rubyonrails.org/migrations.html
 # http://ididitmyway.herokuapp.com/past/2010/4/18/using_active_record_in_the_console/
@@ -24,8 +43,8 @@
 # http://stackoverflow.com/questions/3704065/how-to-import-data-into-rails
 # http://stackoverflow.com/questions/8476769/import-from-csv-into-ruby-array-with-1st-field-as-hash-key-then-lookup-a-field  
 # Features: 
-#   Freier Platz auf Festplatte auf lokalem Rechner
-#  Backup anstossen, 
+#  Freier Platz auf Festplatte auf lokalem Rechner
+# Backup anstossen, 
 
 # TODO: für Elexis-Cockpit
     # Freier Platz auf Festplatte (je Server und Backup)
