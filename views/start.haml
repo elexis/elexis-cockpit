@@ -1,0 +1,26 @@
+%h2 Hier können jede gewünschte Kombination der Elexis-Version, Datenbank und Benutzer starten.
+%br/
+%h3 Bitte Version, Datenbank und Benutzer auswählen.
+.start
+  %form{:action=>"/start", :method=>"post"}
+    %select{:name=>'version', :size => '1'}
+      %option Version
+      - @elexis_versions.each do |version, path| 
+        %option{:value => path} #{version}
+        {:value=>'#{path}'} #{version}
+    dbTyp
+    %select{:name=>'dbFlavor', :size => '1'}
+      %option dbFlavor
+      - settings.info[:dbFlavors].each do |dbFlavor| 
+        %option{:value => dbFlavor} #{dbFlavor}
+    %select{:name=>'dbName', :size => '1'}
+      %option dbName
+      - settings.info[:dbNames].each do |dbName| 
+        %option{:value => dbName} #{dbName}
+    %select{:name=>'dbUser', :size => '1'}
+      %option dbUser
+      - settings.info[:dbUsers].each do |dbUser| 
+        %option{:value => dbUser} #{dbUser}
+    %h3 Passwort: <input type="text" name="dbPw" value='elexisTest'>
+    %input{:type => "submit", :value => "ausführen", :class => "button"}
+  

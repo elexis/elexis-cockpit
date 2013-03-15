@@ -1,0 +1,25 @@
+%html{:lang => 'de'}
+  %head
+    %meta{ :charset=>"utf8"}
+    %title Elexis-Cockpit #{@title ? @title : ''}
+    %link(rel="stylesheet" href="reset.css")
+    %link(rel="stylesheet" href="style.css")
+  %body
+    %header
+      %hgroup
+        %img{:align => 'left', :width=>"150", :height=>"65",:src=> "splash.png", :alt=>"Elexis logo"}
+        %h1
+          %a{:href => "/"}Elexis-Cockpit
+        %h2 damit Sie es leichter haben
+    #container
+      = yield
+
+    %footer
+      %br/
+      %p{:style=>"background-color: #00FFFF", :align => 'center'}
+        %a{:href => "http://www.medelexis.ch"}="(Med-)"
+        %a{:href => "http://elexis.info"}Elexis.
+        Für Elexis: eine freie Schweizer Software von Ärzten für Ärzte<br>
+        &copy; Elexis-Cockpit 2013
+        %a{:href => "mailto:niklaus.giger@member.fsf.org"}Niklaus Giger
+  

@@ -1,0 +1,78 @@
+-# coding: utf-8
+%link(rel="stylesheet" href="/public/style.css")
+%link(rel="stylesheet" href="/public/reset.css")
+%table
+  %td{:width => '65%'}
+    %h1{:align => 'center'}
+      Übersicht für Knoten #{@info[:hostname]}
+    %div
+      - if @info[:dbServer]
+        %P DB-Server ist #{@info[:dbServer]}
+      - else
+        %p Kein DB-Server definiert.
+      - if @info[:dbBackup] %p 
+        %p DB-BackupServer ist #{@info[:dbBackup]}    
+      - else
+        %p Kein DB-BackupServer definiert.
+      - if @info[:backup_server_is] 
+        %p Backup-Server für die Datenbank ist #{@info[:backup_server_is]}
+      - else 
+        %p Kein Backup-Server für die Datenbank definiert
+    %br/
+    %h2{:align => 'center'} Überwachungen
+    %br/
+    - if @info[:backup][:setup_error] 
+      %li{:style=>"background-color: #{@info[:backup][:colour]}"}
+        #{@info[:backup][:tooltip]}
+        Fehler: #{@info[:backup][:okay]}
+    - else
+      %li{:style=>"background-color: #{@info[:backup][:colour]}"}
+        #{@info[:backup][:tooltip]}
+        #{@info[:backup][:okay]}
+    %li Auslastung der eingehängten Partitionen
+    
+    -#  Ohne http://benogle.com/2009/06/16/simple-css-shiny-progress-bar-technique.html
+    -#  hätte Niklaus dies nicht geschafft!! -->
+    - @info[:mounts].each do |id, m|
+      %p{'padding-bottom' => "10px"}
+        .meter-wrap
+          .meter-value{:style=>"background-color: #{m[:background]} ; width: #{m[:percentage]}%"}
+            .meter-text
+              #{sprintf('Belegt %2d%% von %s FS-typ: %-15s', m[:percentage], m[:human_size], m[:mount_type]) + ' eingehängt in ' + m[:mount_point]}
+    %li Todo: Letztes Backup auf externen Datenträger
+    %li Todo: Auslastung Datenträger Server
+    %li Todo: Auslastung Datenträger Backup
+  %td
+    %h2 Wartungsarbeiten
+    %li
+      %a{:href => "installElexis"} Neueste (Med)-Elexis Version installieren
+
+    %li
+      %a{:href => "start"} starte beliebige Elexis/Datenbank-Kombination
+
+    - if @info[:backup][:dump_script] 
+      %form{ :action => "/runDbBackup", :method => "post"}
+        %li
+          %input{:type => "submit", :name => "runDbBackup", 
+          :value => "Datenbank-Backup ausführen", :class => "button"}
+    - else
+      %form{ :action => "/runDbBackup", :method => "post"}
+        %li
+          Fehler: Kein Backup-Script konfiguriert
+          
+    %form{ :action => "/runBackup2external", :method => "post"}
+      %li
+        %input{:type => "submit", :name => "runBackup2external", :value => "Backup auf externe Festplatte", :class => "button"}
+        
+    %li
+      %a{:href => "formatEncrypted"} Verschlüsselte Partition auf externer Festplatte erstellen
+
+    %li
+      %a{:href => "loadDatabase"} Datenbank aus Backup-Verzeichnis wieder herstellen
+    - if @info[:backup_server_is]
+      %li
+        %a{:href => "switchDbServer"} Umschalten auf Backup-Server
+    - else
+      %li
+        Kein Backup-Server für die Datenbank definiert
+

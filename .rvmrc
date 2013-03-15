@@ -1,0 +1,7 @@
+rvm_install_on_use_flag=1
+rvm --create use ruby-2.0.0@elexiscockpit
+rvm use ruby-2.0.0@elexiscockpit --create
+
+alias elexiscockpit="bundle exec elexiscockpit"
+alias irb="bundle exec irb"
+alias shotgun="bundle exec shotgun"

@@ -1,0 +1,13 @@
+- @info = getSystemInfo
+%h2 Umschalten des Datenbank-Servers von #{@info[:dbServer]} nach #{@info[:dbBackup]}
+%p Achtung! Damit werden alle Daten in ihrer jetzigen Datenbank gelöscht. Vergewissern Sie sich, dass
+%ul 
+  %li Niemand ausser Ihnen auf der Datenbank arbeitet
+  %li Nirgends ein Elexis-Programm am laufen ist.
+%br/
+%form{:action=>"/runSwitchDbServer", :method=>"post"} 
+  %h3{:align => 'center'}
+    Auf Datenbank-Server #{@info[:dbBackup]} umschalten
+    %h3{:align => 'center'}
+      %input{:type => "submit", :name=>'switch',:value=>"Jetzt umschalten"}
+%br/

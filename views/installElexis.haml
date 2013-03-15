@@ -1,0 +1,21 @@
+%h2 Neue Elexis-Version installieren
+%p Sie können entweder die Version von Medelexis, die OpenSource installieren.
+%tr
+  %td
+    %p Falls die Version schon installiert ist, wird die Installation fehlschlagen.
+    / %p Sie können wählen, ob auch unter /hom/samba eine Version für Windows-Benutzer installiert werden soll
+  %br/
+
+%tr
+  %td
+  %h2 Bitte gewünschte Elexis-Variante auswählen: 
+  - eInfo = getElexisVersionen; 
+  - if eInfo 
+    %section{:id=>"runInstallElexis"}
+    - eInfo.each do | x|  name = x[:name]; path = x[:path] 
+      %form{ :action => "/runInstallElexis", :method => "post"}
+        %li
+          Um Version #{name}  zu installieren, drücken Sie auf
+          %p{:align => 'right'}
+            %input{:type => "submit", :title=>'#{path}', :name => 'url', :value => "#{path}"}
+        
