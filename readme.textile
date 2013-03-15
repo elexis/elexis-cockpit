@@ -4,8 +4,8 @@ Eine kleine auf sinatra basierend Applikation um Wartungarbeiten für Elexis ein
 
 h2. Dokumentation
 
-Die Dokumentation wird im "Wiki":/elexis/elexis-cockpit/wiki geführt. 
-Dort findet man auch "Screenshots":/elexis/elexis-cockpit/wiki/Screenshots
+Die Dokumentation wird im "Wiki":https://github.com/elexis/elexis-cockpit/wiki geführt. 
+Dort findet man auch "Screenshots":https://github.com/elexis/elexis-cockpit/wiki/Screenshots
 
 Der Code untersteht der GPL v3.0 oder später.
 
