@@ -119,7 +119,7 @@ module Sinatra
   
   def getMountInfo(mounts = Hash.new)
     part_max_fill = 85  
-    mount_points = Filesystem.mounts.select{|m| not /tmp|devpts|proc|sysfs|rootfs|pipefs|binfmt_misc/.match(m.mount_type) }
+    mount_points = Filesystem.mounts.select{|m| not /tmp|devpts|proc|sysfs|rootfs|pipefs|fuse|binfmt_misc/.match(m.mount_type) }
     mount_points.each do |m|
       mount_info = Hash.new
       mp =  Filesystem.stat(m.mount_point);

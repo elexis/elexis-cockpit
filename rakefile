@@ -1,7 +1,79 @@
 require 'rspec/core'
 require 'rspec/core/rake_task'
- 
+require 'fileutils'
+require 'rake/clean'
+
 task :default => :spec
  
 desc "Run all specs in spec directory (excluding plugin specs)"
 RSpec::Core::RakeTask.new(:spec)
+
+DummyScriptDir = File.join(Dir.pwd, 'dummy_scripts')
+
+batchFiles = [
+'install_elexis.rb',
+'mysql_switch_db_server.rb',
+'mysql_dump_elexis.rb',
+'mysql_load_elexis.rb',
+'pg_switch_db_server.rb',
+'pg_load_elexis.rb',
+'pg_dump_elexis.rb',
+'backup_encrypted.rb',
+]
+
+dummy_script_files = batchFiles.map{ |x| File.join(DummyScriptDir, x) }
+dummy_script_files.each { |dummy_script|
+  task dummy_script do |t|
+    FileUtils.makedirs(DummyScriptDir, :verbose => true) unless File.directory?(DummyScriptDir)
+    task file('local_config.yaml') => dummy_script
+    file dummy_script do
+      out = File.open(dummy_script, 'w+')
+      out.puts("#!/bin/bash -v")
+      out.puts("echo File $0 called with args $*")
+      if /load/.match(File.basename(dummy_script)) # make these take 3 seconds and fail
+        puts "dummy_script aus #{t}"
+        out.puts("sleep 3")
+        out.puts("exit 1")
+      else # short and pass
+        out.puts("sleep 0.1")
+        out.puts("exit")
+      end
+      out.close
+      File.chmod(0777, dummy_script)
+    end unless File.exists?(dummy_script)
+  end
+}
+CLOBBER.include(DummyScriptDir)
+
+desc "Dummy Scripts erstellen und local_config.yaml ergänzen"
+task :dummy_scripts =>  dummy_script_files
+task :dummy_scripts => file('local_config.yaml')
+
+file 'local_config.yaml' => [ file('demo_config.yaml') ]  do  |t|
+  src    = 'demo_config.yaml'
+  target = 'local_config.yaml'
+  unless uptodate?(target, src) 
+    puts "Patching #{target} to use scrpts from #{DummyScriptDir}"
+    inhalt = IO.readlines(src)
+    out = File.open(target, 'w+')
+    inhalt.each{ |line| out.puts line.gsub('/usr/local/bin', DummyScriptDir) }
+    out.close
+  end
+end
+CLOBBER.include('local_config.yaml')
+
+wikiImages = 'wiki/images'
+desc "Mit watir die wichtigsten Seiten von Elexis-Cockpit durcharbeiten"
+file 'watir' => [ :dummy_scripts ] do
+  unless File.exists?('watir')
+    FileUtils.rm_rf(wikiImages)
+    okay = system('spec/run_watir_tests.rb')
+    if okay then
+      out = File.open('watir', 'w+')
+      out.puts "Watir-Tests did run successfully on #{Time.now}"      
+    end
+  end
+end
+
+CLOBBER.include('watir')
+CLOBBER.include(wikiImages)
