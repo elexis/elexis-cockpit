@@ -1,4 +1,4 @@
-vi #!/usr/bin/env ruby
+#!/usr/bin/env ruby
 # encoding: utf-8
 
 # Elexis-Cockpit. Eine kleine auf sinatra basierend Applikation
