@@ -29,8 +29,8 @@ module Sinatra
   Orange = '#FFA500'
   
   def get_hiera(key, default_value = nil)
-    local_yaml_db     = File.join(File.dirname(File.dirname(__FILE__)), 'local_config.yaml')
-    local_hiera_conf  = File.join(File.dirname(File.dirname(__FILE__)), 'local_hiera.yaml')
+    local_yaml_db   ||= ENV['COCKPIT_CONFIG']
+    local_yaml_db   ||= File.join(File.dirname(File.dirname(__FILE__)), 'local_config.yaml')
     if File.exists?(local_yaml_db)
       config_values = YAML.load_file(local_yaml_db)
       value = config_values[key]

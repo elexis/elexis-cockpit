@@ -8,7 +8,7 @@ task :default => :spec
 desc "Run all specs in spec directory (excluding plugin specs)"
 RSpec::Core::RakeTask.new(:spec)
 
-DummyScriptDir = File.join(Dir.pwd, 'dummy_scripts')
+MockScriptDir = File.join(Dir.pwd, 'mock_scripts')
 
 batchFiles = [
 'install_elexis.rb',
@@ -21,17 +21,17 @@ batchFiles = [
 'backup_encrypted.rb',
 ]
 
-dummy_script_files = batchFiles.map{ |x| File.join(DummyScriptDir, x) }
-dummy_script_files.each { |dummy_script|
-  task dummy_script do |t|
-    FileUtils.makedirs(DummyScriptDir, :verbose => true) unless File.directory?(DummyScriptDir)
-    task file('local_config.yaml') => dummy_script
-    file dummy_script do
-      out = File.open(dummy_script, 'w+')
+mock_script_files = batchFiles.map{ |x| File.join(MockScriptDir, x) }
+mock_script_files.each { |mock_script|
+  task mock_script do |t|
+    FileUtils.makedirs(MockScriptDir, :verbose => true) unless File.directory?(MockScriptDir)
+    task file('mock_config.yaml') => mock_script
+    file mock_script do
+      out = File.open(mock_script, 'w+')
       out.puts("#!/bin/bash -v")
       out.puts("echo File $0 called with args $*")
-      if /load/.match(File.basename(dummy_script)) # make these take 3 seconds and fail
-        puts "dummy_script aus #{t}"
+      if /load/.match(File.basename(mock_script)) # make these take 3 seconds and fail
+        puts "mock_script aus #{t}"
         out.puts("sleep 3")
         out.puts("exit 1")
       else # short and pass
@@ -39,41 +39,46 @@ dummy_script_files.each { |dummy_script|
         out.puts("exit")
       end
       out.close
-      File.chmod(0777, dummy_script)
-    end unless File.exists?(dummy_script)
+      File.chmod(0777, mock_script)
+    end unless File.exists?(mock_script)
   end
 }
-CLOBBER.include(DummyScriptDir)
+CLOBBER.include(MockScriptDir)
 
-desc "Dummy Scripts erstellen und local_config.yaml ergänzen"
-task :dummy_scripts =>  dummy_script_files
-task :dummy_scripts => file('local_config.yaml')
+desc "Mock Scripts erstellen und mock_config.yaml ergänzen"
+task :mock_scripts =>  mock_script_files
+task :mock_scripts => file('mock_config.yaml')
 
-file 'local_config.yaml' => [ file('demo_config.yaml') ]  do  |t|
+file 'mock_config.yaml' => [ file('demo_config.yaml') ]  do  |t|
   src    = 'demo_config.yaml'
-  target = 'local_config.yaml'
+  target = 'mock_config.yaml'
   unless uptodate?(target, src) 
-    puts "Patching #{target} to use scrpts from #{DummyScriptDir}"
+    puts "Patching #{target} to use scrpts from #{MockScriptDir}"
     inhalt = IO.readlines(src)
     out = File.open(target, 'w+')
-    inhalt.each{ |line| out.puts line.gsub('/usr/local/bin', DummyScriptDir) }
+    inhalt.each{ |line| out.puts line.gsub('/usr/local/bin', MockScriptDir) }
     out.close
   end
 end
-CLOBBER.include('local_config.yaml')
+CLOBBER.include('mock_config.yaml')
 
+ScreenshotTarget = 'screenshots_done'
 wikiImages = 'wiki/images'
-desc "Mit watir die wichtigsten Seiten von Elexis-Cockpit durcharbeiten"
-file 'watir' => [ :dummy_scripts ] do
-  unless File.exists?('watir')
+desc "Mit watir die screenshots von Elexis-Cockpit erstellen
+ set environment variable COCKPIT_BROWSER to use either firefox (default), chrome or ie"
+file ScreenshotTarget => [ :mock_scripts ] do
+  unless File.exists?(ScreenshotTarget)
     FileUtils.rm_rf(wikiImages)
-    okay = system('spec/run_watir_tests.rb')
+    # We want to use mocks for the screenshots
+    ENV['COCKPIT_CONFIG'] = 'mock_config.yaml'
+    okay = system('spec/gen_screenshots.rb')
     if okay then
-      out = File.open('watir', 'w+')
-      out.puts "Watir-Tests did run successfully on #{Time.now}"      
+      out = File.open(ScreenshotTarget, 'w+')
+      out.puts "Watir-Tests did run successfully on #{Time.now}"    
+      out.puts "Created #{Dir.glob(wikiImages+'/*.png').size} screenshots in #{wikiImages}"
     end
   end
 end
 
-CLOBBER.include('watir')
+CLOBBER.include(ScreenshotTarget)
 CLOBBER.include(wikiImages)

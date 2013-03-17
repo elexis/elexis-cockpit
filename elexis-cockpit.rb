@@ -361,9 +361,8 @@ class ElexisCockpit < Sinatra::Base
   
   post '/runBackup2external' do
     puts "post #{request.path_info}: params #{params}"
-    url = params[:url]
     settings.set(:batch, nil)
-    redirect "/runBackup2external?url=#{url}"
+    redirect "/runBackup2external"
   end
 
   get '/runBackup2external' do

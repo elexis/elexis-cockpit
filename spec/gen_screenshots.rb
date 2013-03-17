@@ -9,17 +9,16 @@ for_manual_tests = %(
   browser = Watir::Browser.new :firefox
   browser.goto "localhost:9393"
 )
-
 ImageDest = File.join(Dir.pwd, 'wiki', 'images')
 FileUtils.makedirs(ImageDest, :verbose => true) unless File.exists?(ImageDest)
-browsers2test = [:chrome ] # could be any combination of :ie, :firefox, :chrome
-
+browsers2test ||= [ ENV['COCKPIT_BROWSER'] ]
+browsers2test ||= [:firefox ] # could be any combination of :ie, :firefox, :chrome
 @workThread = nil
 Port = 9393
 Host = 'localhost'
 
 def createScreenshot(browser, added=nil)
-  puts "createScreenshot: #{ browser.url.split(Port.to_s).inspect}"
+  puts "createScreenshot: #{ browser.url.split(Port.to_s).inspect} #{added}"  if $VERBOSE
   if browser.url.index('?')
     name = File.join(ImageDest, File.basename(browser.url.split('?')[0]))
   elsif  browser.url.split(Port.to_s)[-1].eql?('/')
@@ -28,8 +27,8 @@ def createScreenshot(browser, added=nil)
     name = File.join(ImageDest, browser.url.split('/')[-1])
   end
   name = "#{name}#{added}.png"
-  puts "createScreenshot: #{name}" if $VERBOSE
   browser.screenshot.save (name)
+  puts "createScreenshot: #{name} done" if $VERBOSE
 end
 
 def startWebApp(webApp)
@@ -115,28 +114,28 @@ def testElexisCockpit(whichBrowser, webApp)
       puts "button nr ist #{nr}"
       browser.buttons[nr].click
       runOneElexisBatch(browser)
-      browser.goto homeUrl; browser.wait
+      browser.goto homeUrl;
   }
 
-  browser.goto homeUrl; browser.wait
+  browser.goto homeUrl; 
   puts "\n\n\nChecking last button in all links am in #{browser.url}"
   0.upto(browser.links.size-1).each {
     |nr|
       next unless linkIsInteresting(browser.links[nr].href)
       browser.links[nr].click
       runLastButtonWithDefaults(browser)
-      browser.goto homeUrl; browser.wait
+      browser.goto homeUrl;
   }
   
   # Run last form (if any) in all links
-  browser.goto homeUrl; browser.wait
+  browser.goto homeUrl;
   puts "\n\n\nChecking last form in all links am in #{browser.url}"
   0.upto(browser.links.size-1).each {
     |nr|
       next unless linkIsInteresting(browser.links[nr].href)
       browser.links[nr].click
       runLastFormWithDefaults(browser)
-      browser.goto homeUrl; browser.wait
+      browser.goto homeUrl;
   }
   
   res = true
