@@ -48,19 +48,19 @@
       %a{:href => "installElexis"} Neueste (Med)-Elexis Version installieren
 
     %li
-      %a{:href => "start"} starte beliebige Elexis/Datenbank-Kombination
+      %a{:href => "startElexis"} starte beliebige Elexis/Datenbank-Kombination
 
     - if @info[:backup][:dump_script] 
-      %form{ :action => "/runDbBackup", :method => "post"}
+      %form{ :action => "/run_dbBackup", :method => "post"}
         %li
           %input{:type => "submit", :name => "runDbBackup", 
           :value => "Datenbank-Backup ausführen", :class => "button"}
     - else
-      %form{ :action => "/runDbBackup", :method => "post"}
+      %form{ :action => "/run_dbBackup", :method => "post"}
         %li
           Fehler: Kein Backup-Script konfiguriert
           
-    %form{ :action => "/runBackup2external", :method => "post"}
+    %form{ :action => "/run_backup2external", :method => "post"}
       %li
         %input{:type => "submit", :name => "runBackup2external", :value => "Backup auf externe Festplatte", :class => "button"}
         
@@ -76,3 +76,10 @@
       %li
         Kein Backup-Server für die Datenbank definiert
 
+    %form{ :action => "/run_reboot", :method => "post"}
+      %li
+        %input{:type => "submit", :name => "runReboot", :value => "Server neu starten", :class => "button"}
+
+    %form{ :action => "/run_halt", :method => "post"}
+      %li
+        %input{:type => "submit", :name => "runHalt", :value => "Server herunter fahren", :class => "button"}

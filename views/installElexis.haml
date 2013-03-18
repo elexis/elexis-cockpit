@@ -13,7 +13,7 @@
   - if eInfo 
     %section{:id=>"runInstallElexis"}
     - eInfo.each do | x|  name = x[:name]; path = x[:path] 
-      %form{ :action => "/runInstallElexis", :method => "post"}
+      %form{ :action => "/run_installElexis", :method => "post"}
         %li
           Um Version #{name}  zu installieren, drücken Sie auf
           %p{:align => 'right'}

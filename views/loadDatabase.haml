@@ -24,7 +24,7 @@
     - human = distance_of_time_in_words_to_now(mTime)
     %li 
       = "Backup vom #{mTime}. Länge #{File.size(f)} bytes"
-      %form{:action=>"/runLoadDatabase", :method=>"post"} 
+      %form{:action=>"/run_loadDatabase", :method=>"post"} 
         %h3{:align => 'center'}
           Backup von vor #{human} einlesen
           %input{:type => "submit", :value => "#{f}", :name=>'dumpFile'}

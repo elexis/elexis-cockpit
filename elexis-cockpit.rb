@@ -85,23 +85,17 @@ class ElexisCockpit < Sinatra::Base
   helpers do  
     include Rack::Utils  
     alias_method :h, :escape_html  
+    def title(str = nil)
+      # helper for formatting your title string
+      if str
+        str + ' | Site'
+      else
+        'Site'
+      end
+    end
   end  
 
-  configure do
-    set :port,  9393 # same as shotgun
-    set :info,  getSystemInfo
-  end
-
-  # Some helper links. Should allow use to easily get values from server/backup
-  get '/info.yaml' do  
-    getSystemInfo.to_yaml.gsub("\n",'<br>').gsub(' ', '&nbsp;')
-  end
-
-  get '/info.json' do  
-    getSystemInfo.to_json.gsub("\n",'<br>').gsub(' ', '&nbsp;')
-  end
-
-  class BatchRunner
+ class BatchRunner
     attr_accessor :finished, :result, :endTime, :workThread, :updateThread
     attr_reader   :startTime, :batchFile, :title, :info
     $info = nil
@@ -112,11 +106,51 @@ class ElexisCockpit < Sinatra::Base
                   errMsg="#{File.basename(batch_file)} mit Fehler beendet",
                   info = nil)
       @title      = title
-      @batchFile  = batchFile
+      @batchFile  =  batchFile.split(' ')[0]
+      @batchParams = batchFile.split(' ').size == 1 ? nil : batchFile.split(' ')[1..-1]
+      puts "running #{@batchFile} params #{@batchParams}"
       @finished   = false
       @okMsg      = "<div width='500px' style='background-color: #00FF00'  >#{okMsg}</div>"
       @errMsg     = "<div width='500px' style='background-color: #FF0000'  >#{errMsg}</div>"
       @info       = info
+    end
+    
+    def createPages(context, name)
+      runnerName = '/run_'+name
+      puts "createPages #{runnerName}"
+      @batchInfo = nil
+      setRunnerForPath(runnerName, self.clone)
+      
+      context.get '/'+name do
+        puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
+        haml name
+      end
+      
+      context.post runnerName do
+        puts "post #{__LINE__}: #{request.path_info}: params #{params}.inspect"
+        settings.set(:batch, nil)
+        redirect runnerName
+      end
+
+      context.get runnerName do
+        # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
+        puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
+        puts "get #{__LINE__}: #{request.path_info}: getRunnerForPath #{getRunnerForPath(request.path_info)}.inspect"
+        
+        # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
+        unless settings.batch
+          cmd = "#{get_hiera('::hd::external::format_and_encrypt')} --keyfile #{get_hiera('::hd::external::keyfile')}"      
+          file = Tempfile.new(name)
+          file.puts("#!/bin/bash -v")
+          file.puts(cmd) # Wait till finished
+          file.close
+          File.chmod(0755, file.path)
+          settings.set(:batch, getRunnerForPath(request.path_info))
+        end
+        @title = self.title
+        settings.batch.runBatch
+      end 
+
     end
     
     def runBatch
@@ -129,9 +163,11 @@ class ElexisCockpit < Sinatra::Base
       if @batchFile.length < 2 or not File.exists?(@batchFile) or not File.executable?(@batchFile)
         "#{Time.now}: Fehler in der Konfiguration. Datei '#{@batchFile}' kann nicht ausgeführt werden" + back2home
       else
+        cmd = @batchFile
+        cmd += " #{@batchParams.join(' ')}" if @batchParams
         @startTime = Time.now unless @startTime
         @workThread = Thread.new do
-          @result = system(@batchFile)
+          @result = system(cmd)
           @endTime = Time.now
           @finished = true
         end if not @finished and not @workThread
@@ -147,11 +183,26 @@ class ElexisCockpit < Sinatra::Base
           display += "<p>Seite neu laden, um zu sehen, ob das Programm weiterhin läuft.</p>"
         end
         content = IO.read(@batchFile).gsub("\n", "<br>")
-        display += "<p>Batchdatei '#{@batchFile}'. Startzeit #{@startTime}</p>"
+        display += "<p>Befehl: '#{cmd} '</p>"
+        display += "<p>Startzeit: #{@startTime}</p>"
         display += "<p>Inhalt der Batchdatei ist</p><p>#{content}</p>"
         @info ? display + @info.to_s : display
       end
     end
+  end
+
+  configure do
+    set :port,  9393 # same as shotgun
+    set :info,  getSystemInfo
+  end
+
+  # Some helper links. Should allow use to easily get values from server/backup
+  get '/info.yaml' do  
+    getSystemInfo.to_yaml.gsub("\n",'<br>').gsub(' ', '&nbsp;')
+  end
+
+  get '/info.json' do  
+    getSystemInfo.to_json.gsub("\n",'<br>').gsub(' ', '&nbsp;')
   end
 
   get '/' do
@@ -162,20 +213,20 @@ class ElexisCockpit < Sinatra::Base
     haml :home
   end  
 
-  get '/start' do
+  get '/startElexis' do
     @title = 'Elexis starten'
     @elexis_versions = getInstalledElexisVersions
-    haml :start
+    haml :startElexis
   end
 
-  post '/start' do
+  post '/run_startElexis' do
     puts "params = #{params.inspect}"
     version = params[:version]
     settings.set(:batch, nil)
-    redirect "/runElexis?version=#{version}"
+    redirect "/run_startElexis?version=#{version}"
   end 
 
-  get '/runElexis' do
+  get '/run_startElexis' do
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     puts "#{request.path_info}: version #{params[:version]}"
     unless settings.batch
@@ -197,29 +248,12 @@ class ElexisCockpit < Sinatra::Base
     settings.batch.runBatch
   end
 
-  get '/runDbBackup' do
-    puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
-    unless settings.info[:backup][:dump_script]
-      "<h3>Fehler im Setup. Kein backup-Script definiert</h3>"
-      redirect '/'
-    end
-    # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    unless settings.batch
-      settings.batch = BatchRunner.new(settings.info[:backup][:dump_script], 
-                                        'Datenbank-Sicherung gestartet',
-                                        'Datenbank-Sicherung erfolgreich beendet',
-                                        'Datenbank-Sicherung fehlgeschlagen!!!')
-    end
-    @title = settings.batch.title
-    settings.batch.runBatch
-  end
-
-  post '/runDbBackup' do
-    puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
-    settings.set(:batch, nil)
-    redirect '/runDbBackup'    
-  end 
-
+  dbBackup = BatchRunner.new(settings.info[:backup][:dump_script], 
+                            'Datenbank-Sicherung gestartet',
+                            'Datenbank-Sicherung erfolgreich beendet',
+                            'Datenbank-Sicherung fehlgeschlagen!!!')
+  dbBackup.createPages(self, 'dbBackup')
+  
   get '/formatEncrypted' do
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     @title = 'Verschlüsselte Partition erstellen'
@@ -228,14 +262,14 @@ class ElexisCockpit < Sinatra::Base
     haml :formatEncrypted
   end  
   
-  post '/runFormatting' do
+  post '/run_formatting' do
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     device = params[:device]
     settings.set(:batch, nil)
-    redirect "/runFormatting?device=#{device}"
+    redirect "/run_formatting?device=#{device}"
   end  # start the server if ruby file executed directly
   
-  get '/runFormatting' do
+  get '/run_formatting' do
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
@@ -267,17 +301,17 @@ class ElexisCockpit < Sinatra::Base
     puts File.size(tempFile)
     puts tempFile.inspect
     settings.set(:batch, nil)
-    redirect "/runLoadDatabase?dumpFile=#{tempFile.path}"
+    redirect "/run_loadDatabase?dumpFile=#{tempFile.path}"
   end
 
-  post '/runLoadDatabase' do
+  post '/run_loadDatabase' do
     puts "#{request.path_info}: params #{params}"
     dumpFile = params[:dumpFile]
     settings.set(:batch, nil)
-    redirect "/runLoadDatabase?dumpFile=#{dumpFile}"
+    redirect "/run_loadDatabase?dumpFile=#{dumpFile}"
   end
   
-  get '/runLoadDatabase' do
+  get '/run_loadDatabase' do
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
@@ -289,20 +323,20 @@ class ElexisCockpit < Sinatra::Base
     @title = settings.batch.title
     settings.batch.runBatch
   end  # start the server if ruby file executed directly
- 
+  
   get '/installElexis' do
     puts "get 1 #{request.path_info}: params #{params}"
     haml :installElexis
   end
   
-  post '/runInstallElexis' do
+  post '/run_installElexis' do
     puts "post #{request.path_info}: params #{params}"
     url = params[:url]
     settings.set(:batch, nil)
-    redirect "/runInstallElexis?url=#{url}"
+    redirect "/run_installElexis?url=#{url}"
   end
   
-  get '/runInstallElexis' do
+  get '/run_installElexis' do
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     puts "get #{__LINE__}: #{request.path_info}: params #{settings.batch}.inspect"
 
@@ -323,71 +357,34 @@ class ElexisCockpit < Sinatra::Base
     @title = settings.batch.title
     settings.batch.runBatch
   end 
-  
-  get '/switchDbServer' do
-    puts "get 1 #{request.path_info}: params #{params}"
-    haml :switchDbServer
-  end
-  
-  post '/runSwitchDbServer' do
-    puts "post #{request.path_info}: params #{params}"
-    url = params[:url]
-    settings.set(:batch, nil)
-    redirect "/runSwitchDbServer?url=#{url}"
-  end
-  
-  get '/runSwitchDbServer' do
-    # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
-    puts "get #{__LINE__}: #{request.path_info}: params #{settings.batch}.inspect"
-
-    unless settings.batch
-      script_key = "::db::#{get_hiera("::db::type")}::switch::script"
-      script_name = get_hiera(script_key)
-      settings.batch = BatchRunner.new(script_name,
+    
+  switchDbServer = BatchRunner.new("::db::#{get_hiera("::db::type")}::switch::script", 
                                         'Elexis-Datenbank Server umschalten',
                                         'Elexis-Datenbank Server umgeschalten',
                                         'Fehler beim Umschalten des Elexis-Datenbank Servers')
-    end
-    @title = settings.batch.title
-    settings.batch.runBatch
-  end 
-
+  switchDbServer.createPages(self, 'switchDbServer')
   
-  get '/backup2external' do
-    puts "get 1 #{request.path_info}: params #{params}"
-    haml :backup2external
-  end
-  
-  post '/runBackup2external' do
-    puts "post #{request.path_info}: params #{params}"
-    settings.set(:batch, nil)
-    redirect "/runBackup2external"
-  end
+  cmd = "#{get_hiera('::hd::external::format_and_encrypt')} --keyfile #{get_hiera('::hd::external::keyfile')}"      
+  backup2external = BatchRunner.new(cmd.clone, 
+                                    'Backup auf verschlüsselte externe Festplatte',
+                                    'Backup auf verschlüsselte externe Festplatte erfolgreich',
+                                    'Fehler beim Backup auf verschlüsselte externe Festplatte')
 
-  get '/runBackup2external' do
-    # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
-    puts "get #{__LINE__}: #{request.path_info}: params #{settings.batch}.inspect"
-
-    # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    unless settings.batch
-      cmd = "#{get_hiera('::hd::external::format_and_encrypt')} --keyfile #{get_hiera('::hd::external::keyfile')}"      
-      settings.set(:batch, nil)
-      file = Tempfile.new('bkp2ext')
-      file.puts("#!/bin/bash -v")
-      file.puts(cmd) # Wait till finished
-      file.close
-      File.chmod(0755, file.path)
-      settings.batch = BatchRunner.new(file.path, 
-                                        'Backup auf verschlüsselte externe Festplatte',
-                                        'Backup auf verschlüsselte externe Festplatte erfolgreich',
-                                        'Fehler beim Backup auf verschlüsselte externe Festplatte')
-    end
-    @title = settings.batch.title
-    settings.batch.runBatch
-  end 
+  backup2external.createPages(self, 'backup2external')
   
+  reboot = BatchRunner.new(get_hiera("::server::reboot::script", '/usr/local/bin/reboot'),
+                                    'Server neu starten',
+                                    'Server sollte jetzt neu starten',
+                                    'Fehler beim Neustarten des Servers')
+  reboot.createPages(self, 'reboot')
+
+  halt = BatchRunner.new(get_hiera("::server::halt::script", '/usr/local/bin/halt'),
+                                    'Server anhalten',
+                                    'Server sollte jetzt anhalten',
+                                    'Fehler beim Anhalten des Servers')
+  halt.createPages(self, 'halt')
+  
+
   # start the server if ruby file executed directly
   run! if app_file == $0
 end

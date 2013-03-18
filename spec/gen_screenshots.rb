@@ -11,8 +11,8 @@ for_manual_tests = %(
 )
 ImageDest = File.join(Dir.pwd, 'wiki', 'images')
 FileUtils.makedirs(ImageDest, :verbose => true) unless File.exists?(ImageDest)
-browsers2test ||= [ ENV['COCKPIT_BROWSER'] ]
-browsers2test ||= [:firefox ] # could be any combination of :ie, :firefox, :chrome
+browsers2test = [ ENV['COCKPIT_BROWSER'] ] if ENV['COCKPIT_BROWSER'] 
+browsers2test = [ :firefox ] # could be any combination of :ie, :firefox, :chrome
 @workThread = nil
 Port = 9393
 Host = 'localhost'
@@ -92,6 +92,7 @@ end
 def testElexisCockpit(whichBrowser, webApp)
   res = false
   homeUrl =  "#{Host}:#{Port}"
+  puts "Starting #{whichBrowser} at #{homeUrl}" if $VERBOSE
   startWebApp(webApp)
 
   if whichBrowser.eql?(:chrome)
@@ -164,14 +165,15 @@ end
 
 if $0.eql?( __FILE__)
   startTime = Time.now
-  nrBatchFile2Test = 7 # we have 7 batch jobs to test
+  nrBatchFile2Test = 9 # we have 9 batch jobs to test
   browsers2test.each{
     |whichBrowser|
       res = testElexisCockpit(whichBrowser, File.join(Dir.pwd, 'elexis-cockpit.rb'))
       diff = (Time.now-startTime).to_i
       nrScreenshots = Dir.glob(File.join(ImageDest, '*.png')).size
       nrBatchFounds = Dir.glob(File.join(ImageDest, '*_1.png')).size 
-      info = "\n   Brauchte #{diff} Sekunden.\n   Erstellte #{nrScreenshots} mit #{nrBatchFounds}/#{nrBatchFile2Test} screenshots."
+      info = "\n   Brauchte #{diff} Sekunden.\n"
+      info +=  "   Erstellte #{nrScreenshots} screenshots für #{nrBatchFounds} von erwarteten #{nrBatchFile2Test} Batchdateien."
       if res and Dir.glob(File.join(ImageDest, '*_1.png')).size == nrBatchFile2Test 
         puts "Elexis-Cockpit erfolgreich getestet." + info
         exit 0

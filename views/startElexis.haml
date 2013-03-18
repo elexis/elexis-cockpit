@@ -2,7 +2,7 @@
 %br/
 %h3 Bitte Version, Datenbank und Benutzer auswählen.
 .start
-  %form{:action=>"/start", :method=>"post"}
+  %form{:action=>"/run_startElexis", :method=>"post"}
     %select{:name=>'version', :size => '1'}
       %option Version
       - @elexis_versions.each do |version, path| 

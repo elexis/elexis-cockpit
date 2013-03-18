@@ -38,3 +38,6 @@
 "::db::port": 3306
 "::db::user": elexis
 "::db::main": elexis
+
+"::server::reboot::script": '/usr/local/bin/reboot'
+"::server::halt::script": '/usr/local/bin/halt'

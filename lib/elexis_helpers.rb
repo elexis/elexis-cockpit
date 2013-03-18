@@ -27,7 +27,7 @@ module Sinatra
   Green  = '#66FF66'
   Red    = '#FF3300'
   Orange = '#FFA500'
-  
+ 
   def get_hiera(key, default_value = nil)
     local_yaml_db   ||= ENV['COCKPIT_CONFIG']
     local_yaml_db   ||= File.join(File.dirname(File.dirname(__FILE__)), 'local_config.yaml')
@@ -194,7 +194,21 @@ module Sinatra
     externals
   end
   
+  @crossRef = Hash.new
+  
+  def setRunnerForPath(path, runner)
+    @crossRef = Hash.new unless defined?(@crossRef)
+    @crossRef[path] = runner
+    puts "#{__LINE__}: #{@crossRef.inspect}" if $VERBOSE
+  end
+  
+  def getRunnerForPath(path)
+    puts "#{__LINE__}: #{@crossRef.inspect}" if $VERBOSE   
+    @crossRef[path]
+  end
+  
   end
   # this will only affect Sinatra::Application
   register ElexisHelpers
+
 end

@@ -19,6 +19,8 @@ batchFiles = [
 'pg_load_elexis.rb',
 'pg_dump_elexis.rb',
 'backup_encrypted.rb',
+'reboot',
+'halt',
 ]
 
 mock_script_files = batchFiles.map{ |x| File.join(MockScriptDir, x) }
@@ -49,10 +51,10 @@ desc "Mock Scripts erstellen und mock_config.yaml ergänzen"
 task :mock_scripts =>  mock_script_files
 task :mock_scripts => file('mock_config.yaml')
 
-file 'mock_config.yaml' => [ file('demo_config.yaml') ]  do  |t|
+file 'mock_config.yaml' => 'demo_config.yaml'  do |t|
   src    = 'demo_config.yaml'
   target = 'mock_config.yaml'
-  unless uptodate?(target, src) 
+  unless uptodate?(target, [ src ]) 
     puts "Patching #{target} to use scrpts from #{MockScriptDir}"
     inhalt = IO.readlines(src)
     out = File.open(target, 'w+')
