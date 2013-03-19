@@ -14,5 +14,9 @@ gem 'nokogiri'
 gem 'activesupport'
 gem 'i18n_rails_helpers'
 gem 'haml'
-gem 'watir'
-gem 'watir-webdriver'
+group :test do
+  gem 'watir'
+  gem 'watir-webdriver'
+  gem 'rspec'
+  # gem 'capybara' # maybe later
+end
