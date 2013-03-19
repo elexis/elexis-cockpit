@@ -63,6 +63,13 @@ unused devices: <none>
     @okay.getComponents('md99').should be_nil
   end
   
+  it "should return a human readable status" do
+    @okay.human.should          match RaidInfo::OkayPattern
+    @degraded.human.should_not  match RaidInfo::OkayPattern
+    @okay.human.should_not      match RaidInfo::DegradedPattern
+    @degraded.human.should      match RaidInfo::DegradedPattern
+    RaidInfo.new(mdBadFile).human.should match RaidInfo::NoRAID
+  end
 end
 
 

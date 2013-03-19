@@ -27,6 +27,7 @@ module Sinatra
   Green  = '#66FF66'
   Red    = '#FF3300'
   Orange = '#FFA500'
+  White  = '#ffffff'
  
   def get_hiera(key, default_value = nil)
     local_yaml_db   ||= ENV['COCKPIT_CONFIG']
@@ -173,6 +174,7 @@ module Sinatra
     info[:hostname] = Socket.gethostname
     info[:mounts] = getMountInfo
     info[:backup] = getBackupInfo
+    info[:raid]   = RaidInfo.new()
     info
   end
   
@@ -227,8 +229,18 @@ module Sinatra
       MdStat = '/proc/mdstat'
       MatchAssemblyOfTwo = /^(\w*)\W*\:\W*(\w*)\W*(\w*)\W*(\w*)\[\d*\]\W*(\w*)\[\d*\]/
       MatchConfig = /\[([_U]*)\]/
+      OkayPattern = /Alle RAID.*okay/
+      DegradedPattern = /degraded/
+      NoRAID          = 'Kein RAID Festplatten gefunden'
       
-      attr_reader :degraded, :active, :raw, :components
+      attr_reader :degraded, :active, :raw, :components, :background_colour
+      
+      def human
+        return NoRAID unless @raw
+        msg  = "RAID-Partitionen #{@components.collect{ |x,y| x}.inspect}: " 
+        msg += @degraded.size > 0 ? "Warnung: haben schlechte Festplatten in #{@degraded.join(' ')} (degraded)" : 
+              "Alle RAID okay"
+      end
       
       def initialize(mdStatFile = MdStat, content = nil)
         if File.exists?(mdStatFile) and content != nil
@@ -236,6 +248,7 @@ module Sinatra
         else
           @raw = content
         end
+        @background_colour = White
         return unless @raw
         @active = Array.new
         @degraded = Array.new
@@ -258,6 +271,7 @@ module Sinatra
             @degraded << current if /_/.match(m[1])
           end
         }
+          @background_colour = Orange if @degraded.size > 0 
       end
       
       def getComponents(mdpartition)

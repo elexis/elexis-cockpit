@@ -21,6 +21,8 @@
     %br/
     %h2{:align => 'center'} Überwachungen
     %br/
+    %li{:style=>"background-color: #{@info[:raid].background_colour}"}
+      #{@info[:raid].human}
     - if @info[:backup][:setup_error] 
       %li{:style=>"background-color: #{@info[:backup][:colour]}"}
         #{@info[:backup][:tooltip]}
