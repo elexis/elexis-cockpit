@@ -106,14 +106,14 @@ devs_ng =%(
 
   it "should work at niklaus giger place" do
     mounts_ng = YAML.load_file(File.join(File.dirname(__FILE__), "mounts.ng"))
-    candidates = getPossibleExternalDiskDrives(mounts_ng, YAML.load(devs_ng))
+    candidates = Sinatra::ElexisHelpers.getPossibleExternalDiskDrives(mounts_ng, YAML.load(devs_ng))
     candidates.size.should == 1
     candidates['/dev/sdc'].should_not be_nil
     candidates['/dev/sdd'].should     be_nil
   end
   
   it "should work at a special candidates" do
-    candidates = getPossibleExternalDiskDrives
+    candidates = Sinatra::ElexisHelpers.getPossibleExternalDiskDrives
     candidates.size.should == 1
     candidates['/dev/sdc'].should_not be_nil
     candidates['/dev/sdd'].should     be_nil
@@ -121,7 +121,7 @@ devs_ng =%(
 
   it "should work at peter schoenbucher place" do
     mounts_sbu = YAML.load_file(File.join(File.dirname(__FILE__), "mounts.sbu"))
-    candidates = getPossibleExternalDiskDrives(mounts_sbu, YAML.load(devs_sbu), mdstat_okay)
+    candidates = Sinatra::ElexisHelpers.getPossibleExternalDiskDrives(mounts_sbu, YAML.load(devs_sbu), mdstat_okay)
     candidates.size.should == 1
     candidates['/dev/sdc'].should_not be_nil
     candidates['/dev/sdd'].should     be_nil

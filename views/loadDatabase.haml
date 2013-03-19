@@ -12,7 +12,7 @@
     %br
     %input(type='submit' value='Backup einlesen')
 %br/
-- bkpInfo = getBackupInfo; 
+- bkpInfo = Sinatra::ElexisHelpers.getBackupInfo; 
 - unless bkpInfo and bkpInfo[:backups] 
   %h3 Keine Backups gefunden. Irgendwas lief schief
   = bkpInfo.inspect 
@@ -21,7 +21,7 @@
   %br/
   - bkpInfo[:backups].sort.reverse.each do | f| 
     - mTime = File.mtime(f)
-    - human = distance_of_time_in_words_to_now(mTime)
+    - human = Sinatra::ElexisHelpers.distance_of_time_in_words_to_now(mTime)
     %li 
       = "Backup vom #{mTime}. Länge #{File.size(f)} bytes"
       %form{:action=>"/run_loadDatabase", :method=>"post"} 

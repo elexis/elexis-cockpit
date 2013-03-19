@@ -29,7 +29,7 @@ module Sinatra
   Orange = '#FFA500'
   White  = '#ffffff'
  
-  def get_hiera(key, default_value = nil)
+  def self.get_hiera(key, default_value = nil)
     local_yaml_db   ||= ENV['COCKPIT_CONFIG']
     local_yaml_db   ||= File.join(File.dirname(File.dirname(__FILE__)), 'local_config.yaml')
     if File.exists?(local_yaml_db)
@@ -48,7 +48,7 @@ module Sinatra
   
   # next function courtesy of 
   # http://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable
-  def getReadableFileSizeString(fileSizeInBytes)
+  def self.getReadableFileSizeString(fileSizeInBytes)
       i = -1;
       byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB']
       while true do
@@ -61,7 +61,23 @@ module Sinatra
       return (fileSizeInBytes > 0.1 ? fileSizeInBytes.to_s : 1.to_s)+ byteUnits[i]
   end
   
-  def get_db_backup_info(which_one)
+  def self.distance_of_time_in_words_to_now(time)
+    if defined?(ActionView::Helpers::DateHelper.distance_of_time_in_words_to_now)
+      return ActionView::Helpers::DateHelper.distance_of_time_in_words_to_now(time)
+    else
+      human = (Time.now - time).to_i.to_s + ' Sekunden'
+    end
+  end
+  
+  def self.distance_of_time_in_words(later, older)
+    if defined?(ActionView::Helpers::DateHelper.distance_of_time_in_words)
+      return ActionView::Helpers::DateHelper.distance_of_time_in_words(later, older)
+    else
+      human = (later - older).to_i.to_s + ' Sekunden'
+    end
+  end
+  
+  def self.get_db_backup_info(which_one)
     bkpInfo = Hash.new
     maxHours = 24
     maxDays  =  7
@@ -74,8 +90,7 @@ module Sinatra
     else
       neueste = backups[0]
       modificationTime = File.mtime(neueste)
-      human = distance_of_time_in_words(Time.now, modificationTime)
-#        human = (Time.now - modificationTime).to_i
+      human = self.distance_of_time_in_words(Time.now, modificationTime)
       if ((Time.now - modificationTime) > maxDays*24*60*60)      
         bkpInfo[:okay] = "Neueste Backup-Datei '#{neueste}' erstellt vor #{human} ist älter als #{maxDays} Tage"
         bkpInfo[:backup_tooltip] = "Fehlschlag. Fand #{backups.size} Backup-Dateien via '#{search_path}'"
@@ -95,7 +110,7 @@ module Sinatra
     return bkpInfo
   end
 
-  def getInstalledElexisVersions(elexisBasePaths = [ '/srv/elexis', '/usr/share/elexis', "#{ENV['HOME']}/elexis/bin" ])
+  def self.getInstalledElexisVersions(elexisBasePaths = [ '/srv/elexis', '/usr/share/elexis', "#{ENV['HOME']}/elexis/bin" ])
     versions = Hash.new
     elexisBasePaths.each{
       |path|
@@ -113,12 +128,12 @@ module Sinatra
     versions.sort.reverse
   end
 
-  def getSizeOfMountPoint(mount_point)
+  def self.getSizeOfMountPoint(mount_point)
     mp =  Filesystem.stat(mount_point)
     getReadableFileSizeString(mp.blocks * mp.block_size)
   end
   
-  def getMountInfo(mounts = Hash.new)
+  def self.getMountInfo(mounts = Hash.new)
     part_max_fill = 85  
     mount_points = Filesystem.mounts.select{|m| not /tmp|devpts|proc|sysfs|rootfs|pipefs|fuse|binfmt_misc/.match(m.mount_type) }
     mount_points.each do |m|
@@ -136,7 +151,7 @@ module Sinatra
     mounts
   end
 
-  def getDbConfiguration
+  def self.getDbConfiguration
     info = Hash.new
     info[:backup_server_is]  = get_hiera('::db::server::backup_server_is')
     info[:dbServer] = get_hiera('::db::server')
@@ -151,7 +166,7 @@ module Sinatra
     info
   end
   
-  def getElexisVersionen
+  def self.getElexisVersionen
     elexisVarianten = Array.new
     elexisVariante = Hash.new
     elexisVariante[:name] = 'Medelexis 2.1.7'
@@ -164,13 +179,13 @@ module Sinatra
     elexisVarianten
   end
 
-  def getBackupInfo
+  def self.getBackupInfo
     backup = Hash.new 
     dbType = get_hiera("::db::type")
     return get_db_backup_info(dbType)
   end
 
-  def getSystemInfo
+  def self.getSystemInfo
     info          = getDbConfiguration
     info[:hostname] = Socket.gethostname
     info[:mounts] = getMountInfo
@@ -180,7 +195,7 @@ module Sinatra
   end
   
   AvoidBasicPoints = [ '/', '/home', '/usr', '/var', '/tmp', '/opt' ]
-  def getPossibleExternalDiskDrives(injectMounts = nil, injectDevices = nil, injectMdStat = nil)
+  def self.getPossibleExternalDiskDrives(injectMounts = nil, injectDevices = nil, injectMdStat = nil)
     avoid = []
     mounts = injectMounts ? injectMounts : Filesystem.mounts
     mounts.each{ |x| 
@@ -213,13 +228,13 @@ module Sinatra
   
   @crossRef = Hash.new
   
-  def setRunnerForPath(path, runner)
+  def self.setRunnerForPath(path, runner)
     @crossRef = Hash.new unless defined?(@crossRef)
     @crossRef[path] = runner
     puts "#{__LINE__}: #{@crossRef.inspect}" if $VERBOSE
   end
   
-  def getRunnerForPath(path)
+  def self.getRunnerForPath(path)
     puts "#{__LINE__}: #{@crossRef.inspect}" if $VERBOSE   
     @crossRef[path]
   end

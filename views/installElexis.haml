@@ -9,7 +9,7 @@
 %tr
   %td
   %h2 Bitte gewünschte Elexis-Variante auswählen: 
-  - eInfo = getElexisVersionen; 
+  - eInfo = Sinatra::ElexisHelpers.getElexisVersionen; 
   - if eInfo 
     %section{:id=>"runInstallElexis"}
     - eInfo.each do | x|  name = x[:name]; path = x[:path] 
