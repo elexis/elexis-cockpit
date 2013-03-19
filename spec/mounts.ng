@@ -1,0 +1,121 @@
+---
+- !ruby/object:Sys::Filesystem::Mount
+  name: rootfs
+  mount_point: /
+  mount_type: rootfs
+  options: rw
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: sysfs
+  mount_point: /sys
+  mount_type: sysfs
+  options: rw,nosuid,nodev,noexec,relatime
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: proc
+  mount_point: /proc
+  mount_type: proc
+  options: rw,nosuid,nodev,noexec,relatime
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: udev
+  mount_point: /dev
+  mount_type: devtmpfs
+  options: rw,relatime,size=10240k,nr_inodes=2016470,mode=755
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: devpts
+  mount_point: /dev/pts
+  mount_type: devpts
+  options: rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: tmpfs
+  mount_point: /run
+  mount_type: tmpfs
+  options: rw,nosuid,noexec,relatime,size=1614444k,mode=755
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: /dev/disk/by-uuid/11280a33-a453-4dad-84fe-b0fe98d4cec5
+  mount_point: /
+  mount_type: ext4
+  options: rw,relatime,errors=remount-ro,user_xattr,barrier=1,data=ordered
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: tmpfs
+  mount_point: /run/lock
+  mount_type: tmpfs
+  options: rw,nosuid,nodev,noexec,relatime,size=5120k
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: tmpfs
+  mount_point: /run/shm
+  mount_type: tmpfs
+  options: rw,nosuid,nodev,noexec,relatime,size=19272900k
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: /dev/sdb5
+  mount_point: /home
+  mount_type: ext4
+  options: rw,relatime,user_xattr,barrier=1,data=ordered
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: /dev/sdb6
+  mount_point: /opt
+  mount_type: ext4
+  options: rw,relatime,user_xattr,barrier=1,data=ordered
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: rpc_pipefs
+  mount_point: /var/lib/nfs/rpc_pipefs
+  mount_type: rpc_pipefs
+  options: rw,relatime
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: binfmt_misc
+  mount_point: /proc/sys/fs/binfmt_misc
+  mount_type: binfmt_misc
+  options: rw,nosuid,nodev,noexec,relatime
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: fusectl
+  mount_point: /sys/fs/fuse/connections
+  mount_type: fusectl
+  options: rw,relatime
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: admin@192.168.0.18:/share/HDA_DATA
+  mount_point: /mnt/share.fest
+  mount_type: fuse.sshfs
+  options: rw,nosuid,nodev,relatime,user_id=1000,group_id=114,allow_other
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0

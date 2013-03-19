@@ -177,19 +177,33 @@ module Sinatra
   end
   
   AvoidBasicPoints = [ '/', '/home', '/usr', '/var', '/tmp', '/opt' ]
-  def getPossibleExternalDiskDrives
+  def getPossibleExternalDiskDrives(injectMounts = nil, injectDevices = nil, injectMdStat = nil)
     avoid = []
-    Filesystem.mounts.each{ |x| 
+    mounts = injectMounts ? injectMounts : Filesystem.mounts
+    mounts.each{ |x| 
                             if AvoidBasicPoints.index(x.mount_point)
                               next if /rootfs/.match(x.name)
                               File.symlink?(x.name) ? avoid << File.realpath(x.name).chop : avoid << x.name.chop 
                           end
                           }
     externals = Hash.new
-    ((Dir.glob("/dev/sd??").collect{ |x| x.chop }.sort.uniq) - avoid).each {
+    devices = injectDevices ? injectDevices : Dir.glob("/dev/sd??")
+    mdStat  = injectMdStat ? RaidInfo.new(RaidInfo::MdStat, injectMdStat) : RaidInfo.new
+    mdComponents = nil
+    mdComponents = mdStat.components.each.collect{ |x,y| y }.flatten.sort if mdStat and mdStat.components
+    chopped = mdComponents ?  mdComponents.each{ |deviceName| deviceName.chop! }.sort!.uniq! : nil
+    ((devices.collect{ |x| x.chop }.sort.uniq) - avoid).each {
       |mtPoint|
           mp =  Filesystem.stat(mtPoint);
-          externals[mtPoint]  = getReadableFileSizeString(mp.blocks * mp.block_size * mp.fragment_size)
+          if injectMounts 
+            externals[mtPoint]  = 'injected: '+ mtPoint
+          else
+            externals[mtPoint]  = getReadableFileSizeString(mp.blocks * mp.block_size * mp.fragment_size)
+          end
+          if mdStat
+            short = mtPoint.split('/')[-1]
+            externals.delete(mtPoint) if chopped and chopped.index(mtPoint.split('/')[-1])
+    end
     }
     externals
   end
@@ -207,8 +221,57 @@ module Sinatra
     @crossRef[path]
   end
   
+    # Supports only Linux md via /proc/mdstat!
+    # see https://raid.wiki.kernel.org/index.php/Mdstat
+    class RaidInfo
+      MdStat = '/proc/mdstat'
+      MatchAssemblyOfTwo = /^(\w*)\W*\:\W*(\w*)\W*(\w*)\W*(\w*)\[\d*\]\W*(\w*)\[\d*\]/
+      MatchConfig = /\[([_U]*)\]/
+      
+      attr_reader :degraded, :active, :raw, :components
+      
+      def initialize(mdStatFile = MdStat, content = nil)
+        if File.exists?(mdStatFile) and content != nil
+          @raw = IO.readlines(mdStatFile)
+        else
+          @raw = content
+        end
+        return unless @raw
+        @active = Array.new
+        @degraded = Array.new
+        @components = Hash.new
+        current = nil
+        @raw.split("\n").each { 
+          |line|
+          next if /^Personalities|^unused/.match(line)
+          if m = MatchAssemblyOfTwo.match(line)
+            if m[2].eql?('active')              
+              @active << m[1]
+              current = m[1]
+              @components[m[1].clone] = Array.new
+              name1 = m[4]
+              name2 = m[5]
+              @components[m[1]] << name1
+              @components[m[1]] << name2
+            end
+          elsif m = MatchConfig.match(line)
+            @degraded << current if /_/.match(m[1])
+          end
+        }
+      end
+      
+      def getComponents(mdpartition)
+        @components ? @components[mdpartition] : nil
+      end
+      
+    end
   end
-  # this will only affect Sinatra::Application
-  register ElexisHelpers
+  
+  
+  # Skip registering when running as sinatra app
+  if defined?(register) 
+    # this will only affect Sinatra::Application
+    register ElexisHelpers
+  end
 
 end

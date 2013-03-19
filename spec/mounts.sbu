@@ -1,0 +1,121 @@
+---
+- !ruby/object:Sys::Filesystem::Mount
+  name: /dev/md1
+  mount_point: /
+  mount_type: ext3
+  options: rw,errors=remount-ro
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: tmpfs
+  mount_point: /lib/init/rw
+  mount_type: tmpfs
+  options: rw,nosuid,mode=0755
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: proc
+  mount_point: /proc
+  mount_type: proc
+  options: rw,noexec,nosuid,nodev
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: sysfs
+  mount_point: /sys
+  mount_type: sysfs
+  options: rw,noexec,nosuid,nodev
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: udev
+  mount_point: /dev
+  mount_type: tmpfs
+  options: rw,mode=0755
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: tmpfs
+  mount_point: /dev/shm
+  mount_type: tmpfs
+  options: rw,nosuid,nodev
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: devpts
+  mount_point: /dev/pts
+  mount_type: devpts
+  options: rw,noexec,nosuid,gid=5,mode=620
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: /dev/md0
+  mount_point: /boot
+  mount_type: ext3
+  options: rw
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: /dev/md13
+  mount_point: /home
+  mount_type: ext3
+  options: rw
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: /dev/md4
+  mount_point: /snapshots
+  mount_type: ext3
+  options: rw
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: rpc_pipefs
+  mount_point: /var/lib/nfs/rpc_pipefs
+  mount_type: rpc_pipefs
+  options: rw
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: fusectl
+  mount_point: /sys/fs/fuse/connections
+  mount_type: fusectl
+  options: rw
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: nfsd
+  mount_point: /proc/fs/nfsd
+  mount_type: nfsd
+  options: rw
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: binfmt_misc
+  mount_point: /proc/sys/fs/binfmt_misc
+  mount_type: binfmt_misc
+  options: rw,noexec,nosuid,nodev
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0
+- !ruby/object:Sys::Filesystem::Mount
+  name: /etc/hylafax
+  mount_point: /var/spool/hylafax/etc
+  mount_type: none
+  options: rw,bind
+  mount_time: 
+  dump_frequency: 0
+  pass_number: 0

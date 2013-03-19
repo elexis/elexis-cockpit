@@ -67,8 +67,8 @@ CLOBBER.include('mock_config.yaml')
 ScreenshotTarget = 'screenshots_done'
 wikiImages = 'wiki/images'
 desc "Mit watir die screenshots von Elexis-Cockpit erstellen
- set environment variable COCKPIT_BROWSER to use either firefox (default), chrome or ie"
-file ScreenshotTarget => [ :mock_scripts ] do
+set environment variable COCKPIT_BROWSER to use either firefox (default), chrome or ie"
+file ScreenshotTarget => [ :spec, :mock_scripts ] do
   unless File.exists?(ScreenshotTarget)
     FileUtils.rm_rf(wikiImages)
     # We want to use mocks for the screenshots
