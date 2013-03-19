@@ -245,7 +245,7 @@ module Sinatra
       
       def initialize(mdStatFile = MdStat, content = nil)
         if content == nil
-          @raw = IO.read(mdStatFile) if File.exists?(mdStatFile) ?           
+          @raw = IO.read(mdStatFile) if File.exists?(mdStatFile)           
         else
           @raw = content
         end
