@@ -81,7 +81,7 @@ module Sinatra
     bkpInfo = Hash.new
     maxHours = 24
     maxDays  =  7
-    search_path = get_hiera("::db::#{get_hiera('::db::type')}::backup::files")
+    search_path = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::backup::files")
     backups =  Dir.glob(search_path)
     bkpInfo[:backups] = backups
     if  bkpInfo[:backups].size == 0
@@ -104,9 +104,9 @@ module Sinatra
         bkpInfo[:backup_tooltip] = "#{backups.size} Backups vorhanden. Neueste #{neueste}  #{File.size(neueste)} Bytes erstellt vor #{human}"
       end
     end
-    bkpInfo[:dump_script] = get_hiera("::db::#{get_hiera('::db::type')}::dump::script")
-    bkpInfo[:load_script] = get_hiera("::db::#{get_hiera('::db::type')}::load::script")
-    bkpInfo[:bkp_files]   = get_hiera("::db::#{get_hiera('::db::type')}::backup::files")
+    bkpInfo[:dump_script] = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::dump::script")
+    bkpInfo[:load_script] = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::load::script")
+    bkpInfo[:bkp_files]   = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::backup::files")
     return bkpInfo
   end
 
@@ -153,16 +153,16 @@ module Sinatra
 
   def self.getDbConfiguration
     info = Hash.new
-    info[:backup_server_is]  = get_hiera('::db::server::backup_server_is')
-    info[:dbServer] = get_hiera('::db::server')
-    info[:dbBackup] = get_hiera('::db::backup')
+    info[:backup_server_is]  = get_hiera('elexis::db_server::backup_server_is')
+    info[:dbServer] = get_hiera('elexis::db_server')
+    info[:dbBackup] = get_hiera('elexis::db_backup')
     info[:dbFlavors] = ['h2', 'mysql', 'postgresql' ]
     info[:dbHosts]  = [ 'localhost' ]
     info[:dbHosts] << :server if info[:server]
     info[:dbHosts] << 'backup' if info[:backup]
-    info[:dbPorts]  = [ get_hiera('::db::port') ]
-    info[:dbUsers]  = [ get_hiera('::db::user')]
-    info[:dbNames]  = [ get_hiera('::db::main')]
+    info[:dbPorts]  = [ get_hiera('elexis::db_port') ]
+    info[:dbUsers]  = [ get_hiera('elexis::db_user')]
+    info[:dbNames]  = [ get_hiera('elexis::db_main')]
     info
   end
   
@@ -181,7 +181,7 @@ module Sinatra
 
   def self.getBackupInfo
     backup = Hash.new 
-    dbType = get_hiera("::db::type")
+    dbType = get_hiera("elexis::db_type")
     return get_db_backup_info(dbType)
   end
 

@@ -359,7 +359,7 @@ class ElexisCockpit < Sinatra::Base
     settings.batch.runBatch
   end 
     
-  switchDbServer = BatchRunner.new("::db::#{Sinatra::ElexisHelpers.get_hiera("::db::type")}::switch::script", 
+  switchDbServer = BatchRunner.new("elexis::db_#{Sinatra::ElexisHelpers.get_hiera("elexis::db_type")}::switch::script", 
                                         'Elexis-Datenbank Server umschalten',
                                         'Elexis-Datenbank Server umgeschalten',
                                         'Fehler beim Umschalten des Elexis-Datenbank Servers')

@@ -3,41 +3,41 @@
 # If you have MySQL backups named like
 # /home/backup/mysql/mysql_backup_20130310-230501.sql.bz2
 # set the next two lines like
-"::db::backup::dir": /home/backup
-
+elexis::db_backup::dir: /home/backup
+elexis::url: Elexis/URL
 # To we use MySQL or Postgres ?
-"::db::type": mysql
+elexis::db_type: mysql
 
 # Elexis-Vagrant puts all custom binaries into /usr/local/bin
-"::elexis::install::script": /usr/local/bin/install_elexis.rb
+elexis::install::script: /usr/local/bin/install_elexis.rb
 
 # These are the default values for MySQL
-"::db::mysql::switch::script": /usr/local/bin/mysql_switch_db_server.rb
-"::db::mysql::dump::script": /usr/local/bin/mysql_dump_elexis.rb
-"::db::mysql::load::script": /usr/local/bin/mysql_load_elexis.rb
-"::db::mysql::backup::files": /home/backup/mysql/mysql_backup_*.sql.bz2
+elexis::db_mysql::switch::script: /usr/local/bin/mysql_switch_db_server.rb
+elexis::db_mysql::dump::script: /usr/local/bin/mysql_dump_elexis.rb
+elexis::db_mysql::load::script: /usr/local/bin/mysql_load_elexis.rb
+elexis::db_mysql::backup::files: /home/backup/mysql/mysql_backup_*.sql.bz2
 
 # These are the default values for PostgreSQL
-"::db::postgresql::switch::script": /usr/local/bin/pg_switch_db_server.rb
-"::db::postgresql::load::script": /usr/local/bin/pg_load_elexis.rb
-"::db::postgresql::dump::script": /usr/local/bin/pg_dump_elexis.rb
-"::db::postgresql::backup::files": /home/backup/pg/pg_backup_*.sql.bz2
-
-# Scripts to format and encrypt external HD disk
-"::hd::external::format_and_encrypt": /usr/local/bin/backup_encrypted.rb
-"::hd::external::keyfile": /home/backup/external/id.sdd
+elexis::db_postgresql::switch::script: /usr/local/bin/pg_switch_db_server.rb
+elexis::db_postgresql::load::script: /usr/local/bin/pg_load_elexis.rb
+elexis::db_postgresql::dump::script: /usr/local/bin/pg_dump_elexis.rb
+elexis::db_postgresql::backup::files: /home/backup/pg/pg_backup_*.sql.bz2
 
 # Name of first DB-server
-"::db::server": server_1_green
+elexis::db_server: server_1_green
 
 # Name of second DB-server
-"::db::backup": server_2_orange
+elexis::db_backup: server_2_orange
 
 # Tell who is the backup DB server (or false) if there is no online backup
-"::db::server::backup_server_is": server_2_orange
-"::db::port": 3306
-"::db::user": elexis
-"::db::main": elexis
+elexis::db_server::backup_server_is: server_2_orange
+elexis::db_port: 3306
+elexis::db_user: elexis
+elexis::db_main: elexis
 
-"::server::reboot::script": '/usr/local/bin/reboot'
-"::server::halt::script": '/usr/local/bin/halt'
+# Scripts to format and encrypt external HD disk
+elexis::hd::external::format_and_encrypt: /usr/local/bin/backup_encrypted.rb
+elexis::hd::external::keyfile: /home/backup/external/id.sdd
+
+elexis::server::reboot::script: '/usr/local/bin/reboot'
+elexis::server::halt::script: '/usr/local/bin/halt'
