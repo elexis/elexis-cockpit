@@ -39,7 +39,7 @@ module Sinatra
     else
       hiera_yaml = '/etc/puppet/hiera.yaml'
       scope = 'path_to_no_file'
-      value = Hiera.new(:config => hiera_yaml).lookup(key, 'unbekannt', scope)
+      value = Hiera.new(:config => hiera_yaml).lookup(key, "'Wert der Variable #{key} unbekannt'", scope)
       puts "#{hiera_yaml}: hiera key #{key} returns #{value}" 
     end
     value = default_value if default_value and not value
