@@ -140,7 +140,7 @@ class ElexisCockpit < Sinatra::Base
         
         # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
         unless settings.batch
-          cmd = "#{Sinatra::ElexisHelpers.get_hiera('::hd::external::format_and_encrypt')} --keyfile #{Sinatra::ElexisHelpers.get_hiera('::hd::external::keyfile')}"      
+          cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_format_and_encrypt')} --keyfile #{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_keyfile')}"      
           file = Tempfile.new(name)
           file.puts("#!/bin/bash -v")
           file.puts(cmd) # Wait till finished
@@ -183,6 +183,7 @@ class ElexisCockpit < Sinatra::Base
           display += "<h3>Arbeit ist seit #{diffSeconds} Sekunden am laufen.</h3>"
           display += "<p>Seite neu laden, um zu sehen, ob das Programm weiterhin läuft.</p>"
         end
+        puts "readine #{@batchFile}"
         content = IO.read(@batchFile).gsub("\n", "<br>")
         display += "<p>Befehl: '#{cmd} '</p>"
         display += "<p>Startzeit: #{@startTime}</p>"
@@ -275,7 +276,7 @@ class ElexisCockpit < Sinatra::Base
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
-      cmd = "#{Sinatra::ElexisHelpers.get_hiera('::hd::external::format_and_encrypt')} -init --device #{params[:device]}"  
+      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_format_and_encrypt')} -init --device #{params[:device]}"  
       file = Tempfile.new('runFormatting')
       file.puts("#!/bin/bash -v")
       file.puts(cmd) # Wait till finished
@@ -344,7 +345,7 @@ class ElexisCockpit < Sinatra::Base
 
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
-      cmd = "#{Sinatra::ElexisHelpers.get_hiera('::elexis::install::script')} #{params[:url]} "  
+      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::install_script', '/usr/local/bin/install_elexis.rb')} #{params[:url]} "  
       settings.set(:batch, nil)
       file = Tempfile.new('installElexis')
       file.puts("#!/bin/bash -v")
@@ -360,13 +361,13 @@ class ElexisCockpit < Sinatra::Base
     settings.batch.runBatch
   end 
     
-  switchDbServer = BatchRunner.new("elexis::db_#{Sinatra::ElexisHelpers.get_hiera("elexis::db_type")}::switch::script", 
+  switchDbServer = BatchRunner.new("elexis::#{Sinatra::ElexisHelpers.get_hiera("elexis::db_type")}_switch_script", 
                                         'Elexis-Datenbank Server umschalten',
                                         'Elexis-Datenbank Server umgeschalten',
                                         'Fehler beim Umschalten des Elexis-Datenbank Servers')
   switchDbServer.createPages(self, 'switchDbServer')
   
-  cmd = "#{Sinatra::ElexisHelpers.get_hiera('::hd::external::format_and_encrypt')} --keyfile #{Sinatra::ElexisHelpers.get_hiera('::hd::external::keyfile')}"      
+  cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_format_and_encrypt')} --keyfile #{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_keyfile')}"      
   backup2external = BatchRunner.new(cmd.clone, 
                                     'Backup auf verschlüsselte externe Festplatte',
                                     'Backup auf verschlüsselte externe Festplatte erfolgreich',
@@ -374,13 +375,13 @@ class ElexisCockpit < Sinatra::Base
 
   backup2external.createPages(self, 'backup2external')
   
-  reboot = BatchRunner.new(Sinatra::ElexisHelpers.get_hiera("::server::reboot::script", '/usr/local/bin/reboot'),
+  reboot = BatchRunner.new(Sinatra::ElexisHelpers.get_hiera("server::reboot_script", '/usr/local/bin/reboot'),
                                     'Server neu starten',
                                     'Server sollte jetzt neu starten',
                                     'Fehler beim Neustarten des Servers')
   reboot.createPages(self, 'reboot')
 
-  halt = BatchRunner.new(Sinatra::ElexisHelpers.get_hiera("::server::halt::script", '/usr/local/bin/halt'),
+  halt = BatchRunner.new(Sinatra::ElexisHelpers.get_hiera("server::halt_script", '/usr/local/bin/halt'),
                                     'Server anhalten',
                                     'Server sollte jetzt anhalten',
                                     'Fehler beim Anhalten des Servers')

@@ -38,7 +38,7 @@ module Sinatra
       puts "local config config for #{key} got #{value}" if $VERBOSE
     else
       hiera_yaml = '/etc/puppet/hiera.yaml'
-      scope = 'path_to_no_file'
+      scope = '/dev/null'
       value = Hiera.new(:config => hiera_yaml).lookup(key, "'Wert der Variable #{key} unbekannt'", scope)
       puts "#{hiera_yaml}: hiera key #{key} returns #{value}" 
     end
@@ -81,7 +81,7 @@ module Sinatra
     bkpInfo = Hash.new
     maxHours = 24
     maxDays  =  7
-    search_path = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup::files")
+    search_path = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup_files")
     backups =  Dir.glob(search_path)
     bkpInfo[:backups] = backups
     if  bkpInfo[:backups].size == 0
@@ -104,9 +104,9 @@ module Sinatra
         bkpInfo[:backup_tooltip] = "#{backups.size} Backups vorhanden. Neueste #{neueste}  #{File.size(neueste)} Bytes erstellt vor #{human}"
       end
     end
-    bkpInfo[:dump_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_dump::script")
-    bkpInfo[:load_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_load::script")
-    bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup::files")
+    bkpInfo[:dump_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_dump_script")
+    bkpInfo[:load_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_load_script")
+    bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup_files")
     return bkpInfo
   end
 

@@ -3,25 +3,30 @@
 # If you have MySQL backups named like
 # /home/backup/mysql/mysql_backup_20130310-230501.sql.bz2
 # set the next two lines like
-elexis::db_backup::dir: /home/backup
+elexis::db_backup_dir: /home/backup
 elexis::url: Elexis/URL
 # To we use MySQL or Postgres ?
 elexis::db_type: mysql
 
+# This script must be normal bash scripts or we will have problem
+elexis::install_script: /usr/local/bin/reboot
+server::reboot_script: /usr/local/bin/reboot
+server::halt_script:   /usr/local/bin/halt
+
 # Elexis-Vagrant puts all custom binaries into /usr/local/bin
-elexis::install::script: /usr/local/bin/install_elexis.rb
+elexis::install_script: /usr/local/bin/install_elexis.rb
 
 # These are the default values for MySQL
-elexis::mysql_switch::script: /usr/local/bin/mysql_switch_db_server.rb
-elexis::mysql_dump::script: /usr/local/bin/mysql_dump_elexis.rb
-elexis::mysql_load::script: /usr/local/bin/mysql_load_elexis.rb
-elexis::mysql_backup::files: /home/backup/mysql/mysql_backup_*.sql.bz2
+elexis::mysql_switch_script: /usr/local/bin/mysql_switch_db_server.rb
+elexis::mysql_dump_script: /usr/local/bin/mysql_dump_elexis.rb
+elexis::mysql_load_script: /usr/local/bin/mysql_load_elexis.rb
+elexis::mysql_backup_files: /home/backup/mysql/mysql_backup_*.sql.bz2
 
 # These are the default values for PostgreSQL
-elexis::pg_switch::script: /usr/local/bin/pg_switch_db_server.rb
-elexis::pg_load::script: /usr/local/bin/pg_load_elexis.rb
-elexis::pg_dump::script: /usr/local/bin/pg_dump_elexis.rb
-elexis::pg_backup::files: /home/backup/pg/pg_backup_*.sql.bz2
+elexis::pg_switch_script: /usr/local/bin/pg_switch_db_server.rb
+elexis::pg_load_script: /usr/local/bin/pg_load_elexis.rb
+elexis::pg_dump_script: /usr/local/bin/pg_dump_elexis.rb
+elexis::pg_backup_files: /home/backup/pg/pg_backup_*.sql.bz2
 
 # Name of first DB-server
 elexis::db_server: server_1_green
@@ -36,8 +41,8 @@ elexis::db_user: elexis
 elexis::db_main: elexis
 
 # Scripts to format and encrypt external HD disk
-elexis::hd::external::format_and_encrypt: /usr/local/bin/backup_encrypted.rb
-elexis::hd::external::keyfile: /home/backup/external/id.sdd
+elexis::hd_external_format_and_encrypt: /usr/local/bin/backup_encrypted.rb
+elexis::hd_external_keyfile: /home/backup/external/id.sdd
 
-elexis::server::reboot::script: '/usr/local/bin/reboot'
-elexis::server::halt::script: '/usr/local/bin/halt'
+elexis::server_reboot_script: '/usr/local/bin/reboot'
+elexis::server_halt_script: '/usr/local/bin/halt'
