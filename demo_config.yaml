@@ -12,16 +12,16 @@ elexis::db_type: mysql
 elexis::install::script: /usr/local/bin/install_elexis.rb
 
 # These are the default values for MySQL
-elexis::db_mysql::switch::script: /usr/local/bin/mysql_switch_db_server.rb
-elexis::db_mysql::dump::script: /usr/local/bin/mysql_dump_elexis.rb
-elexis::db_mysql::load::script: /usr/local/bin/mysql_load_elexis.rb
-elexis::db_mysql::backup::files: /home/backup/mysql/mysql_backup_*.sql.bz2
+elexis::mysql_switch::script: /usr/local/bin/mysql_switch_db_server.rb
+elexis::mysql_dump::script: /usr/local/bin/mysql_dump_elexis.rb
+elexis::mysql_load::script: /usr/local/bin/mysql_load_elexis.rb
+elexis::mysql_backup::files: /home/backup/mysql/mysql_backup_*.sql.bz2
 
 # These are the default values for PostgreSQL
-elexis::db_postgresql::switch::script: /usr/local/bin/pg_switch_db_server.rb
-elexis::db_postgresql::load::script: /usr/local/bin/pg_load_elexis.rb
-elexis::db_postgresql::dump::script: /usr/local/bin/pg_dump_elexis.rb
-elexis::db_postgresql::backup::files: /home/backup/pg/pg_backup_*.sql.bz2
+elexis::pg_switch::script: /usr/local/bin/pg_switch_db_server.rb
+elexis::pg_load::script: /usr/local/bin/pg_load_elexis.rb
+elexis::pg_dump::script: /usr/local/bin/pg_dump_elexis.rb
+elexis::pg_backup::files: /home/backup/pg/pg_backup_*.sql.bz2
 
 # Name of first DB-server
 elexis::db_server: server_1_green

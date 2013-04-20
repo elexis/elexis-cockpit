@@ -112,13 +112,6 @@ devs_ng =%(
     candidates['/dev/sdd'].should     be_nil
   end
   
-  it "should work at a special candidates" do
-    candidates = Sinatra::ElexisHelpers.getPossibleExternalDiskDrives
-    candidates.size.should == 1
-    candidates['/dev/sdc'].should_not be_nil
-    candidates['/dev/sdd'].should     be_nil
-  end if Socket.gethostname.eql?('ng-tr')
-
   it "should work at peter schoenbucher place" do
     mounts_sbu = YAML.load_file(File.join(File.dirname(__FILE__), "mounts.sbu"))
     candidates = Sinatra::ElexisHelpers.getPossibleExternalDiskDrives(mounts_sbu, YAML.load(devs_sbu), mdstat_okay)

@@ -81,7 +81,7 @@ module Sinatra
     bkpInfo = Hash.new
     maxHours = 24
     maxDays  =  7
-    search_path = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::backup::files")
+    search_path = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup::files")
     backups =  Dir.glob(search_path)
     bkpInfo[:backups] = backups
     if  bkpInfo[:backups].size == 0
@@ -104,9 +104,9 @@ module Sinatra
         bkpInfo[:backup_tooltip] = "#{backups.size} Backups vorhanden. Neueste #{neueste}  #{File.size(neueste)} Bytes erstellt vor #{human}"
       end
     end
-    bkpInfo[:dump_script] = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::dump::script")
-    bkpInfo[:load_script] = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::load::script")
-    bkpInfo[:bkp_files]   = get_hiera("elexis::db_#{get_hiera('elexis::db_type')}::backup::files")
+    bkpInfo[:dump_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_dump::script")
+    bkpInfo[:load_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_load::script")
+    bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup::files")
     return bkpInfo
   end
 
@@ -212,10 +212,10 @@ module Sinatra
     chopped = mdComponents ?  mdComponents.each{ |deviceName| deviceName.chop! }.sort!.uniq! : nil
     ((devices.collect{ |x| x.chop }.sort.uniq) - avoid).each {
       |mtPoint|
-          mp =  Filesystem.stat(mtPoint);
           if injectMounts 
             externals[mtPoint]  = 'injected: '+ mtPoint
           else
+            mp =  Filesystem.stat(mtPoint);
             externals[mtPoint]  = getReadableFileSizeString(mp.blocks * mp.block_size * mp.fragment_size)
           end
           if mdStat
