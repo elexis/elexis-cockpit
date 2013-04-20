@@ -195,6 +195,7 @@ class ElexisCockpit < Sinatra::Base
   configure do
     set :port,  9393 # same as shotgun
     set :info,  Sinatra::ElexisHelpers.getSystemInfo
+    set :bind, '0.0.0.0' # open it on all network interfaces
   end
 
   # Some helper links. Should allow use to easily get values from server/backup
