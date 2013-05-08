@@ -20,6 +20,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 require 'sys/filesystem'
+require 'open-uri'
 include Sys
 
 module Sinatra
@@ -110,7 +111,7 @@ module Sinatra
     return bkpInfo
   end
 
-  def self.getInstalledElexisVersions(elexisBasePaths = [ '/srv/elexis', '/usr/share/elexis', "#{ENV['HOME']}/elexis/bin" ])
+  def self.getInstalledElexisVersions(elexisBasePaths = [ '/srv/elexis', '/usr/share/elexis', "#{ENV['HOME']}/elexis/bin", '/opt/elexis', '/opt/elexis_opensource' ])
     versions = Hash.new
     elexisBasePaths.each{
       |path|
@@ -167,15 +168,8 @@ module Sinatra
   end
   
   def self.getElexisVersionen
-    elexisVarianten = Array.new
-    elexisVariante = Hash.new
-    elexisVariante[:name] = 'Medelexis 2.1.7'
-    elexisVariante[:path] = 'http://www.medelexis.ch/dl21.php?file=medelexis-linux'
-    elexisVarianten << elexisVariante
-    elexisVariante = Hash.new
-    elexisVariante[:name] = 'Elexis 2.1.6.1'   
-    elexisVariante[:path] = 'http://ftp.medelexis.ch/downloads_opensource/elexis/2.1.6.1/elexis-linux-2.1.6.1.20111211-install.jar'
-    elexisVarianten << elexisVariante
+    urlName = 'http://ngiger.dyndns.org/elexis/elexisVersions.yaml'
+    elexisVarianten = YAML::load_documents( open(urlName))[0]
     elexisVarianten
   end
 

@@ -1,26 +1,34 @@
+- @db_type = Sinatra::ElexisHelpers.get_hiera('elexis::db_type', 'mysql')
 %h2 Hier können jede gewünschte Kombination der Elexis-Version, Datenbank und Benutzer starten.
 %br/
 %h3 Bitte Version, Datenbank und Benutzer auswählen.
 .start
   %form{:action=>"/run_startElexis", :method=>"post"}
-    %select{:name=>'version', :size => '1'}
-      %option Version
-      - @elexis_versions.each do |version, path| 
-        %option{:value => path} #{version}
-        {:value=>'#{path}'} #{version}
-    dbTyp
-    %select{:name=>'dbFlavor', :size => '1'}
-      %option dbFlavor
-      - settings.info[:dbFlavors].each do |dbFlavor| 
-        %option{:value => dbFlavor} #{dbFlavor}
-    %select{:name=>'dbName', :size => '1'}
-      %option dbName
-      - settings.info[:dbNames].each do |dbName| 
-        %option{:value => dbName} #{dbName}
-    %select{:name=>'dbUser', :size => '1'}
-      %option dbUser
-      - settings.info[:dbUsers].each do |dbUser| 
-        %option{:value => dbUser} #{dbUser}
-    %h3 Passwort: <input type="text" name="dbPw" value='elexisTest'>
-    %input{:type => "submit", :value => "ausführen", :class => "button"}
+    %table{:border => "1"}
+      %tbody 
+        %tr 
+          %th{:width => '25%', :align => 'left'} Elexis Version
+          %th{:width => '25%', :align => 'left'} Name der Datenbank
+          %th{:width => '25%', :align => 'left'} Benutzer der #{@db_type} Datenbank
+        %tr
+          %td
+            %select{:name=>'version'}
+              - @elexis_versions.each do |version, path| 
+                %option{:value => path, :selected => true} #{version}
+                {:value=>'#{path}'} #{version}
+          %td
+            %select{:name=>'dbName'}
+              - @main = Sinatra::ElexisHelpers.get_hiera("elexis::#{@db_type}_main_db_name")
+              %option{:selected => true, :value => "#{@main}" } #{@main}
+              - @tst = Sinatra::ElexisHelpers.get_hiera("elexis::#{@db_type}_tst_db_name")
+              %option{:selected => false, :value => "#{@tst}" } #{@tst}
+          %td
+            %select{:name=>'dbUser'}
+              - settings.info[:dbUsers].each do |dbUser| 
+                %option{:value => dbUser, :selected => true} #{dbUser}
+        %tr
+          %td
+            %h3 Mit #{@db_type} DB-Passwort <input type="text" name="dbPw" value='elexisTest'>
+            %input{:type => 'hidden', :name => "dbFlavor",     :value => "#{@db_type}" }
+            %input{:type => "submit", :value => "ausführen", :class => "button"}
   

@@ -8,14 +8,21 @@
 
 %tr
   %td
-  %h2 Bitte gewünschte Elexis-Variante auswählen: 
   - eInfo = Sinatra::ElexisHelpers.getElexisVersionen; 
   - if eInfo 
+    %h2 Bitte gewünschte Elexis-Variante auswählen: 
     %section{:id=>"runInstallElexis"}
     - eInfo.each do | x|  name = x[:name]; path = x[:path] 
       %form{ :action => "/run_installElexis", :method => "post"}
+        %p
+        %p 
         %li
-          Um Version #{name}  zu installieren, drücken Sie auf
-          %p{:align => 'right'}
+          Um
+          %strong #{name}
+          ( 
+          %input{:type => 'hidden',    :name => "subdir",     :value => x[:subdir] }
+          %input{:type => "checkbox",  :name => "withDemoDB", :value => "true"}
+          ankreuzen, falls DemoDatenbank gewünscht) zu installieren, drücken Sie auf
+          %p{:align => 'left'}
             %input{:type => "submit", :title=>"#{path}", :name => 'url', :value => "#{path}"}
         

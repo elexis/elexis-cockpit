@@ -106,9 +106,13 @@ class ElexisCockpit < Sinatra::Base
                   errMsg="#{File.basename(batch_file)} mit Fehler beendet",
                   info = nil)
       @title      = title
-      @batchFile  =  batchFile.split(' ')[0]
-      @batchParams = batchFile.split(' ').size == 1 ? nil : batchFile.split(' ')[1..-1]
-      puts "running #{@batchFile} params #{@batchParams}"
+      if batchFile
+        @batchFile  =  batchFile.split(' ')[0]
+        @batchParams = batchFile.split(' ').size == 1 ? nil : batchFile.split(' ')[1..-1]
+        puts "running #{@batchFile} params #{@batchParams}"
+      else
+        @batchFile  =  "unknown batch file"
+      end
       @finished   = false
       @okMsg      = "<div width='500px' style='background-color: #00FF00'  >#{okMsg}</div>"
       @errMsg     = "<div width='500px' style='background-color: #FF0000'  >#{errMsg}</div>"
@@ -117,7 +121,7 @@ class ElexisCockpit < Sinatra::Base
     
     def createPages(context, name)
       runnerName = '/run_'+name
-      puts "createPages #{runnerName}"
+      puts "createPages #{runnerName} batch #{@batchFile}"
       @batchInfo = nil
       puts (self.methods - Object.methods).inspect
       Sinatra::ElexisHelpers.setRunnerForPath(runnerName, self.clone)
@@ -140,12 +144,15 @@ class ElexisCockpit < Sinatra::Base
         
         # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
         unless settings.batch
-          cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_format_and_encrypt')} --keyfile #{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_keyfile')}"      
-          file = Tempfile.new(name)
-          file.puts("#!/bin/bash -v")
-          file.puts(cmd) # Wait till finished
-          file.close
-          File.chmod(0755, file.path)
+          cmd = "#{@batchFile} #{@batchParams}"
+          puts "runnerName #{runnerName} cmd #{cmd} @batchFile #{@batchFile}"
+          if defined?(cmd)
+            file = Tempfile.new(name)
+            file.puts("#!/bin/bash -v")
+            file.puts(cmd) # Wait till finished
+            file.close
+            File.chmod(0755, file.path)
+          end
           settings.set(:batch, Sinatra::ElexisHelpers.getRunnerForPath(request.path_info))
         end
         @title = self.title
@@ -183,8 +190,11 @@ class ElexisCockpit < Sinatra::Base
           display += "<h3>Arbeit ist seit #{diffSeconds} Sekunden am laufen.</h3>"
           display += "<p>Seite neu laden, um zu sehen, ob das Programm weiterhin läuft.</p>"
         end
-        puts "readine #{@batchFile}"
-        content = IO.read(@batchFile).gsub("\n", "<br>")
+        content = 'unbekannt. Wahrscheinlich eine Exe-Datei.'
+        begin
+          content = IO.read(@batchFile).gsub("\n", "<br>")
+        rescue
+        end
         display += "<p>Befehl: '#{cmd} '</p>"
         display += "<p>Startzeit: #{@startTime}</p>"
         display += "<p>Inhalt der Batchdatei ist</p><p>#{content}</p>"
@@ -219,24 +229,30 @@ class ElexisCockpit < Sinatra::Base
   get '/startElexis' do
     @title = 'Elexis starten'
     @elexis_versions = Sinatra::ElexisHelpers.getInstalledElexisVersions
+    puts "#{request.path_info}: version #{params[:version]}"
     haml :startElexis
   end
 
   post '/run_startElexis' do
-    puts "params = #{params.inspect}"
-    version = params[:version]
-    settings.set(:batch, nil)
-    redirect "/run_startElexis?version=#{version}"
+    puts "post #{request.path_info}: params #{params}"
+    query = params.map{|key, value| "#{key}=#{value}"}.join("&")
+    settings.set(:batch, nil) 
+    redirect "/run_startElexis?#{query}"
   end 
 
   get '/run_startElexis' do
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     puts "#{request.path_info}: version #{params[:version]}"
+    flavor = params[:dbFlavor]
+    flavor = 'postgresql' if /pg/i.match(flavor)
+    dbHost = 'localhost' 
     unless settings.batch
-      cmd = "nice #{params[:version]}/elexis " # +
-          # "-Dch.elexis.dbUser=#{params[:dbUser]} -Dch.elexis.dbPw=#{params[:dbPw]} " +
-          # "-Dch.elexis.dbFlavor=#{params[:dbFlavor]}  -Dch.elexis.dbSpec=jdbc:#{params[:dbFlavor]}://#{params[:dbHost]}:#{params[:dbPort]}/#{params[:dbName]}"
+      cmd = "nice #{params[:version]}/elexis -vmargs "  +
+           "-Dch.elexis.dbUser=#{params[:dbUser]} -Dch.elexis.dbPw=#{params[:dbPw]} " +
+           "-Dch.elexis.dbFlavor=#{flavor} -Dch.elexis.dbSpec=jdbc:#{flavor}://#{dbHost}/#{params[:dbName]}"
+      # -Dch.elexis.dbSpec=jdbc:#{params[:dbFlavor]}://#{params[:dbHost]}:#{params[:dbPort]}/#{params[:dbName]}"
       # Could also query for -Dch.elexis.username=test -Dch.elexis.password=test 
+     # eg. jdbc:mysql://localhost:3306/elexis
       file = Tempfile.new('runElexis')
       file.puts("#!/bin/bash -v")
       file.puts(cmd + " &") # run in the background
@@ -334,18 +350,18 @@ class ElexisCockpit < Sinatra::Base
   
   post '/run_installElexis' do
     puts "post #{request.path_info}: params #{params}"
-    url = params[:url]
+    query = params.map{|key, value| "#{key}=#{value}"}.join("&")
     settings.set(:batch, nil)
-    redirect "/run_installElexis?url=#{url}"
+    redirect "/run_installElexis?#{query}"
   end
   
   get '/run_installElexis' do
-    puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
-    puts "get #{__LINE__}: #{request.path_info}: params #{settings.batch}.inspect"
+    puts "get #{__LINE__}: #{request.path_info}: params #{params.inspect}"
 
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
-      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::install_script', '/usr/local/bin/install_elexis.rb')} #{params[:url]} "  
+      installDir = File.join('/opt', params[:subdir])
+      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::install_script', '/usr/local/bin/install_elexis.rb')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"  
       settings.set(:batch, nil)
       file = Tempfile.new('installElexis')
       file.puts("#!/bin/bash -v")
@@ -354,7 +370,7 @@ class ElexisCockpit < Sinatra::Base
       File.chmod(0755, file.path)
       settings.batch = BatchRunner.new(file.path, 
                                         'Elexis-Version installieren',
-                                        'Elexis-Version installiert',
+                                        "Elexis-Version installiert in #{installDir}",
                                         'Fehler bei der Installation von Elexis')
     end
     @title = settings.batch.title
@@ -375,13 +391,16 @@ class ElexisCockpit < Sinatra::Base
 
   backup2external.createPages(self, 'backup2external')
   
-  reboot = BatchRunner.new(Sinatra::ElexisHelpers.get_hiera("server::reboot_script", '/usr/local/bin/reboot'),
+  cmd = Sinatra::ElexisHelpers.get_hiera("server::reboot_script", '/sbin/reboot')
+  puts "reboot cmd ist #{cmd}"
+  reboot = BatchRunner.new(cmd.clone,
                                     'Server neu starten',
                                     'Server sollte jetzt neu starten',
                                     'Fehler beim Neustarten des Servers')
   reboot.createPages(self, 'reboot')
 
-  halt = BatchRunner.new(Sinatra::ElexisHelpers.get_hiera("server::halt_script", '/usr/local/bin/halt'),
+  cmd  = Sinatra::ElexisHelpers.get_hiera("server::halt_script", '/sbin/halt')
+  halt = BatchRunner.new(cmd.clone,
                                     'Server anhalten',
                                     'Server sollte jetzt anhalten',
                                     'Fehler beim Anhalten des Servers')
