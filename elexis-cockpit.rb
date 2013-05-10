@@ -385,7 +385,6 @@ class ElexisCockpit < Sinatra::Base
         "#{Time.now}: Fehler dumpFile #{dumpFile} nicht vorhanden" + $back2home     
     else
       cmd = "#{loadScript} #{dumpFile}"  
-      settings.set(:batch, nil)
       file = Tempfile.new('loadDatabase')
       file.puts("#!/bin/bash -v")
       file.puts(cmd) # Wait till finished
