@@ -86,6 +86,7 @@ module Sinatra
     backups =  Dir.glob(search_path)
     bkpInfo[:backups] = backups
     if  bkpInfo[:backups].size == 0
+      bkpInfo[:colour] = Red
       bkpInfo[:okay] = "Keine Backup_Dateien via '#{search_path}' gefunden"
       bkpInfo[:backup_tooltip] = "Fehlschlag. Bitte beheben Sie das Problem"
     else
@@ -106,7 +107,8 @@ module Sinatra
       end
     end
     bkpInfo[:dump_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_dump_script")
-    bkpInfo[:load_script] = get_hiera("elexis::#{get_hiera('elexis::db_type')}_load_script")
+    bkpInfo[:load_main]   = get_hiera("elexis::#{get_hiera('elexis::db_type')}_load_main_script")
+    bkpInfo[:load_test]   = get_hiera("elexis::#{get_hiera('elexis::db_type')}_load_test_script")
     bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup_files")
     return bkpInfo
   end
@@ -168,8 +170,13 @@ module Sinatra
   end
   
   def self.getElexisVersionen
-    urlName = 'http://ngiger.dyndns.org/elexis/elexisVersions.yaml'
-    elexisVarianten = YAML::load_documents( open(urlName))[0]
+    begin
+      urlName = 'http://ngiger.dyndns.org/elexis/elexisVersions.yaml'
+      elexisVarianten = YAML::load_documents( open(urlName))[0]
+    rescue
+      urlName = File.join(File.dirname(File.dirname(__FILE__)), 'elexisVersions.yaml') 
+      elexisVarianten =  YAML::load( File.open(urlName) )
+    end
     elexisVarianten
   end
 

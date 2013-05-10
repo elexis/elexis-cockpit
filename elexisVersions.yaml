@@ -1,0 +1,9 @@
+---
+- 
+  :name: "Elexis (OpenSource) 2.1.7.0"
+  :subdir:  elexis_opensource/2.1.7.0
+  :path: "http://ngiger.dyndns.org/jenkins/job/elexis-2.1.7-Buildr/245/artifact/deploy/elexis-2.1.7.20121124-installer.jar"
+- 
+  :name: "Elexis (OpenSource) 2.1.7.1.rc3"
+  :subdir:  elexis_opensource/2.1.7.1.rc3
+  :path: "http://ngiger.dyndns.org/jenkins/job/elexis-2.1.7-Buildr/375/artifact/deploy/elexis-2.1.7.1rc320130503-installer.jar"

@@ -7,11 +7,22 @@
     %link(rel="stylesheet" href="style.css")
   %body
     %header
-      %hgroup
-        %img{:align => 'left', :width=>"150", :height=>"65",:src=> "splash.png", :alt=>"Elexis logo"}
-        %h1
-          %a{:href => "/"}Elexis-Cockpit
-        %h2 damit Sie es leichter haben
+      %table
+        %tr
+          %td{:width => '37%'}
+            %img{:align => 'left', :width=>"150", :height=>"65",:src=> "splash.png", :alt=>"Elexis logo"}
+          %td{:width => '40%', :align => 'right'}
+            %h1
+              %a{:href => "/"}Elexis-Cockpit
+            %h2 damit Sie es leichter haben
+          %td{:width => '25%', :align => 'right'}
+            %p
+              %a{:href => "/info"} Mehr darüber.
+            %p
+              %a{:href => "/danke"} Danke an...
+            %p
+              %a{:href => "/todo"} Pendenzen
+
     #container
       = yield
 
@@ -21,6 +32,9 @@
         %a{:href => "http://www.medelexis.ch"}="(Med-)"
         %a{:href => "http://elexis.info"}Elexis.
         Für Elexis: eine freie Schweizer Software von Ärzten für Ärzte<br>
-        &copy; Elexis-Cockpit 2013
-        %a{:href => "mailto:niklaus.giger@member.fsf.org"}Niklaus Giger
+        &copy; Elexis-Cockpit 2013 von 
+        %a{:href => "mailto:niklaus.giger@member.fsf.org"}Niklaus Giger.
+        %a{:href => "/info"} Mehr darüber.
+        %a{:href => "/danke"} Danke an...
+        %a{:href => "/todo"} Pendenzen
   

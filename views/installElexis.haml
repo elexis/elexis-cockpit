@@ -16,13 +16,28 @@
       %form{ :action => "/run_installElexis", :method => "post"}
         %p
         %p 
-        %li
-          Um
+        %li          
           %strong #{name}
-          ( 
-          %input{:type => 'hidden',    :name => "subdir",     :value => x[:subdir] }
-          %input{:type => "checkbox",  :name => "withDemoDB", :value => "true"}
-          ankreuzen, falls DemoDatenbank gewünscht) zu installieren, drücken Sie auf
-          %p{:align => 'left'}
-            %input{:type => "submit", :title=>"#{path}", :name => 'url', :value => "#{path}"}
-        
+          %p 
+            aus #{path}
+          %p 
+            %input{:type => 'hidden',    :name => "subdir",     :value => x[:subdir] }
+            %input{:type => "checkbox",  :name => "withDemoDB", :value => "true"}
+            ankreuzen, falls DemoDatenbank gewünscht)
+          %p{:align => :right}
+            %input{:type => "submit", :title=>"#{path}", :name => 'url', :value => "installieren"}
+    %li
+      %strong Oder 
+      %form{ :action => "/run_installElexis", :method => "post",  :enctype =>'multipart/form-data'}
+        Pfad für Installation angeben. /opt/
+        %input{:type => 'input',     :name => "subdir",     :value => "elexis/eineVersion" }         
+        %p 
+          und Elexis-Installer-Datei auswählen
+          %input{:type => 'file',      :name => "url",        :value => "/opt/downloads" }
+          %p
+          (
+          %input{:type => "checkbox",  :name => "withDemoDB", :value => "true"} 
+          ankreuzen, falls DemoDatenbank gewünscht)
+          %p{:align => :right}
+            %input{:type => "submit", :title=>"Jetzt installieren", :name => 'url', :value => "installieren"}
+ 

@@ -26,9 +26,9 @@
     - if @info[:backup][:setup_error] 
       %li{:style=>"background-color: #{@info[:backup][:colour]}"}
         #{@info[:backup][:tooltip]}
-        Fehler: #{@info[:backup][:okay]}
+        Fehler: #{@info[:backup][:okay]} xx
     - else
-      %li{:style=>"background-color: #{@info[:backup][:colour]}"}
+      %li{:style=>"background-color: #{@info[:backup][:colour]}; width: 80%; border-radius: 5px"}
         #{@info[:backup][:tooltip]}
         #{@info[:backup][:okay]}
     %li Auslastung der eingehängten Partitionen
@@ -41,9 +41,6 @@
           .meter-value{:style=>"background-color: #{m[:background]} ; width: #{m[:percentage]}%"}
             .meter-text
               #{sprintf('Belegt %2d%% von %s FS-typ: %-15s', m[:percentage], m[:human_size], m[:mount_type]) + ' eingehängt in ' + m[:mount_point]}
-    %li Todo: Letztes Backup auf externen Datenträger
-    %li Todo: Auslastung Datenträger Server
-    %li Todo: Auslastung Datenträger Backup
   %td
     %h2 Wartungsarbeiten
     %li
@@ -71,17 +68,11 @@
 
     %li
       %a{:href => "loadDatabase"} Datenbank aus Backup-Verzeichnis wieder herstellen
-    - if @info[:backup_server_is]
-      %li
-        %a{:href => "switchDbServer"} Umschalten auf Backup-Server
-    - else
-      %li
-        Kein Backup-Server für die Datenbank definiert
-
+    %li
+      %a{:href => "loadTestDatabase"} Test-Datenbank einlesen
     %form{ :action => "/run_reboot", :method => "post"}
-      %li
-        %input{:type => "submit", :name => "runReboot", :value => "Server neu starten", :class => "button"}
-
+    %li
+      %input{:type => "submit", :name => "runReboot", :value => "Server neu starten", :class => "button"}
     %form{ :action => "/run_halt", :method => "post"}
       %li
         %input{:type => "submit", :name => "runHalt", :value => "Server herunter fahren", :class => "button"}

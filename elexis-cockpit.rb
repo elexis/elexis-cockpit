@@ -99,6 +99,7 @@ class ElexisCockpit < Sinatra::Base
     attr_accessor :finished, :result, :endTime, :workThread, :updateThread
     attr_reader   :startTime, :batchFile, :title, :info
     $info = nil
+    $back2home = "<p><a href='/'>Zurück zur Hauptseite</a></p>"
     
     def initialize(batchFile, 
                   title="#{File.basename(batch_file)} ausführen",
@@ -132,7 +133,7 @@ class ElexisCockpit < Sinatra::Base
       end
       
       context.post runnerName do
-        puts "post #{__LINE__}: #{request.path_info}: params #{params}.inspect"
+        puts "line #{__LINE__}: post #{__LINE__}: #{request.path_info}: params #{params}.inspect"
         settings.set(:batch, nil)
         redirect runnerName
       end
@@ -167,15 +168,21 @@ class ElexisCockpit < Sinatra::Base
         "<h1>Fehler beim Setup @batchFile ist nicht definiert! <h1>"
         return
       end
-      back2home = "<p><a href='/'>Zurück zur Hauptseite</a></p>"
       if @batchFile.length < 2 or not File.exists?(@batchFile) or not File.executable?(@batchFile)
-        "#{Time.now}: Fehler in der Konfiguration. Datei '#{@batchFile}' kann nicht ausgeführt werden" + back2home
+        "#{Time.now}: Fehler in der Konfiguration. Datei '#{@batchFile}' kann nicht ausgeführt werden" + $back2home
       else
         cmd = @batchFile
         cmd += " #{@batchParams.join(' ')}" if @batchParams
         @startTime = Time.now unless @startTime
         @workThread = Thread.new do
-          @result = system(cmd)
+          begin
+            puts "running #{cmd}"
+            @result = system(cmd)
+            puts "#{cmd} returned #{@result}"
+          rescue
+            puts "rescue for #{cmd}"
+            @result = false
+          end
           @endTime = Time.now
           @finished = true
         end if not @finished and not @workThread
@@ -183,7 +190,7 @@ class ElexisCockpit < Sinatra::Base
         if @finished
           diffSeconds = (@endTime-@startTime).to_i
           display += "<h3>Arbeit beendet (nach #{diffSeconds} Sekunden).</h3>"
-          display += back2home 
+          display += $back2home 
           display += @result ? @okMsg : @errMsg
         else
           diffSeconds = (Time.now-@startTime).to_i
@@ -225,16 +232,28 @@ class ElexisCockpit < Sinatra::Base
     settings.set(:batch, nil)
     haml :home
   end  
+  
+  get '/info' do
+    haml :info
+  end
+  
+  get '/danke' do
+    haml :danke
+  end
 
+  get '/todo' do
+    haml :todo
+  end
+  
   get '/startElexis' do
     @title = 'Elexis starten'
     @elexis_versions = Sinatra::ElexisHelpers.getInstalledElexisVersions
-    puts "#{request.path_info}: version #{params[:version]}"
+    puts "#{request.path_info}: line #{__LINE__}: version #{params[:version]}"
     haml :startElexis
   end
 
   post '/run_startElexis' do
-    puts "post #{request.path_info}: params #{params}"
+    puts "line #{__LINE__}: post #{request.path_info}: params #{params}"
     query = params.map{|key, value| "#{key}=#{value}"}.join("&")
     settings.set(:batch, nil) 
     redirect "/run_startElexis?#{query}"
@@ -242,7 +261,7 @@ class ElexisCockpit < Sinatra::Base
 
   get '/run_startElexis' do
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    puts "#{request.path_info}: version #{params[:version]}"
+    puts "#{request.path_info}: line #{__LINE__}: version #{params[:version]}"
     flavor = params[:dbFlavor]
     flavor = 'postgresql' if /pg/i.match(flavor)
     dbHost = 'localhost' 
@@ -311,36 +330,76 @@ class ElexisCockpit < Sinatra::Base
     haml :loadDatabase
   end
   
-  post "/loadDatabase" do 
-    puts "#{request.path_info}: params #{params}"
-    dumpFile = 'uploads/' + params['dumpFile'][:filename]
-    tempFile = params['dumpFile'][:tempfile]
-    puts tempFile
-    puts File.exists?(tempFile)
-    puts File.size(tempFile)
-    puts tempFile.inspect
-    settings.set(:batch, nil)
-    redirect "/run_loadDatabase?dumpFile=#{tempFile.path}"
+  post '/loadDatabase' do 
+    puts "#{request.path_info}: line #{__LINE__}: params #{params}"
+    # dumpFile = 'uploads/' + params['dumpFile'][:filename]
+    unless params['dumpFile'] 
+      "#{Time.now}: Fehler: Eine Datei zum laden muss ausgewählt werden!" + $back2home
+    else
+      dumpFile = params['dumpFile'][:tempfile].path
+      puts "#{request.path_info}: dumpFile #{dumpFile} exists? #{File.exists?(dumpFile)} size #{File.size(dumpFile)}"
+      settings.set(:batch, nil)
+      puts "#{request.path_info}: line #{__LINE__}: params #{params}"
+      redirectUrl =  "/run_loadDatabase?whichDb=#{params[:whichDb]}&dumpFile=#{dumpFile}"
+      redirect redirectUrl
+    end
+  end
+
+  get '/loadTestDatabase' do
+    haml :loadTestDatabase
+  end
+  
+  post '/loadTestDatabase' do 
+    puts "#{request.path_info}: line #{__LINE__}: params #{params}"
+    # dumpFile = 'uploads/' + params['dumpFile'][:filename]
+    unless params['dumpFile'] 
+      "#{Time.now}: Fehler: Eine Datei zum laden muss ausgewählt werden!" + $back2home
+    else
+      dumpFile = params['dumpFile'][:tempfile].path
+      puts "#{request.path_info}: dumpFile #{dumpFile} exists? #{File.exists?(dumpFile)} size #{File.size(dumpFile)}"
+      settings.set(:batch, nil)
+      puts "#{request.path_info}: line #{__LINE__}: params #{params}"
+      redirectUrl =  "/run_loadDatabase?whichDb=#{params[:whichDb]}&dumpFile=#{dumpFile}"
+      redirect redirectUrl
+    end
   end
 
   post '/run_loadDatabase' do
-    puts "#{request.path_info}: params #{params}"
-    dumpFile = params[:dumpFile]
+    puts "line #{__LINE__}: post #{request.path_info}: params #{params}"
+    query = params.map{|key, value| "#{key}=#{value}"}.join("&")
     settings.set(:batch, nil)
-    redirect "/run_loadDatabase?dumpFile=#{dumpFile}"
+    redirect "/run_loadDatabase?#{query}"
   end
   
   get '/run_loadDatabase' do
-    puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
+    puts "get #{__LINE__}: #{request.path_info}: params 0"
+    puts "get #{__LINE__}: #{request.path_info}: params #{params.inspect}"
+    puts "get #{__LINE__}: #{params[:dumpFile].inspect}"
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    unless settings.batch
-      settings.batch = BatchRunner.new(settings.info[:backup][:load_script],
-                                        'Datenbank aus Dump wieder herstellen',
-                                        'Datenbank erfolgreich wieder hergestellt',
-                                        'Datenbank konnte nicht wieder hergestellt werden')
+    whichDb = params[:whichDb]
+    dumpFile = params[:dumpFile]
+    loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_hiera("elexis::db_type")}_load_#{whichDb}_db.rb"
+    if not File.exists?(loadScript) 
+        "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden" + $back2home 
+    elsif not File.exists?(dumpFile)
+        "#{Time.now}: Fehler dumpFile #{dumpFile} nicht vorhanden" + $back2home     
+    else
+      cmd = "#{loadScript} #{dumpFile}"  
+      settings.set(:batch, nil)
+      file = Tempfile.new('loadDatabase')
+      file.puts("#!/bin/bash -v")
+      file.puts(cmd) # Wait till finished
+      file.close
+      File.chmod(0755, file.path)
+      unless settings.batch
+        settings.batch = BatchRunner.new(file.path,
+                                          "#{whichDb}-Datenbank aus Dump #{dumpFile} wieder herstellen",
+                                          "#{whichDb}-Datenbank aus Dump #{dumpFile} erfolgreich wieder hergestellt",
+                                          "#{whichDb}-Datenbank konnte nicht wieder hergestellt werden. Fehler in Dumpfile #{dumpFile}?")
+      end
+      @title = settings.batch.title
+      settings.batch.runBatch
     end
-    @title = settings.batch.title
-    settings.batch.runBatch
   end  # start the server if ruby file executed directly
   
   get '/installElexis' do
@@ -349,7 +408,7 @@ class ElexisCockpit < Sinatra::Base
   end
   
   post '/run_installElexis' do
-    puts "post #{request.path_info}: params #{params}"
+    puts "line #{__LINE__}: post #{request.path_info}: params #{params}"
     query = params.map{|key, value| "#{key}=#{value}"}.join("&")
     settings.set(:batch, nil)
     redirect "/run_installElexis?#{query}"

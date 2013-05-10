@@ -1,0 +1,14 @@
+-# coding: utf-8
+%h1 Mögliche Ausbauschritte
+%li Zeit des letztes Backup auf externen Datenträger anzeigen
+%li PostresSQL mit Hot-backup
+%li Auslastung Datenträger Server
+%li Auslastung Datenträger Backup
+%li Umschalten auf Backup-Server. Idee ist wie folgt
+- if @info and @info[:backup_server_is]
+  %li
+    %a{:href => "switchDbServer"} Umschalten auf Backup-Server
+- else
+  %li
+    Kein Backup-Server für die Datenbank definiert
+

@@ -7,15 +7,18 @@
 %br/
 %h2 
   Pfad der Backup-Datei selber auswählen
-  %form(method="post" enctype='multipart/form-data')   
-    %input(type='file' name='dumpFile')    
-    %br
-    %input(type='submit' value='Backup einlesen')
+%p Diese muss im Unterverzeichnis /opt/downloads zu finden sein
+- # enctype='multipart/form-data')   
+%form(method="post")
+  %input(type='file' name='dumpFile')    
+  %br
+  %input{:type => 'hidden', :name => "whichDb", :value => "main" }
+  %input(type='submit' value='Backup einlesen')
 %br/
 - bkpInfo = Sinatra::ElexisHelpers.getBackupInfo; 
-- unless bkpInfo and bkpInfo[:backups] 
+- unless bkpInfo and bkpInfo[:backups] and bkpInfo[:backups].size > 0 
   %h3 Keine Backups gefunden. Irgendwas lief schief
-  = bkpInfo.inspect 
+  #{bkpInfo.inspect}
 - else
   %h2 Oder die gewünschte Sicherungskopie auswählen:
   %br/
@@ -27,6 +30,7 @@
       %form{:action=>"/run_loadDatabase", :method=>"post"} 
         %h3{:align => 'center'}
           Backup von vor #{human} einlesen
-          %input{:type => "submit", :value => "#{f}", :name=>'dumpFile'}
+          %input{:type => 'hidden', :name => "whichDb", :value => "main" }
+          %input{:type => "submit", :name=>'dumpFile',  :value => "#{f}"}
       %br/
       
