@@ -15,13 +15,15 @@ batchFiles = [
 'install_elexis.rb',
 'mysql_switch_db_server.rb',
 'mysql_dump_elexis.rb',
-'mysql_load_elexis.rb',
+'mysql_load_main.rb',
+'mysql_load_test.rb',
 'pg_switch_db_server.rb',
-'pg_load_elexis.rb',
 'pg_dump_elexis.rb',
+'pg_load_main.rb',
+'pg_load_test.rb',
 'backup_encrypted.rb',
-'reboot',
-'halt',
+'reboot.sh',
+'halt.sh',
 ]
 
 mock_script_files = batchFiles.map{ |x| File.join(MockScriptDir, x) }

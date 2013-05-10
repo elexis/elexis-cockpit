@@ -331,9 +331,9 @@ class ElexisCockpit < Sinatra::Base
   end
   
   post '/loadDatabase' do 
-    puts "#{request.path_info}: line #{__LINE__}: params #{params}"
+    puts "#{request.path_info}: line #{__LINE__}: params #{params.inspect}"
     # dumpFile = 'uploads/' + params['dumpFile'][:filename]
-    unless params['dumpFile'] 
+    unless params['dumpFile'] and params['dumpFile'].size > 0 and File.exists?(params['dumpFile'])
       "#{Time.now}: Fehler: Eine Datei zum laden muss ausgewählt werden!" + $back2home
     else
       dumpFile = params['dumpFile'][:tempfile].path

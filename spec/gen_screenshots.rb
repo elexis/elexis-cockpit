@@ -166,7 +166,7 @@ end
 
 if $0.eql?( __FILE__)
   startTime = Time.now
-  nrBatchFile2Test = 9 # we have 9 batch jobs to test
+  nrBatchFile2Test = 7 # must be changed manually
   browsers2test.each{
     |whichBrowser|
       res = testElexisCockpit(whichBrowser, File.join(Dir.pwd, 'elexis-cockpit.rb'))

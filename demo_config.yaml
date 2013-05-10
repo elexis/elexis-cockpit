@@ -21,16 +21,27 @@ server::halt_script:   /usr/local/bin/halt.sh
 elexis::install_script: /usr/local/bin/install_elexis.rb
 
 # These are the default values for MySQL
-elexis::mysql_switch_script: /usr/local/bin/mysql_switch_db_server.rb
-elexis::mysql_dump_script: /usr/local/bin/mysql_dump_elexis.rb
-elexis::mysql_load_script: /usr/local/bin/mysql_load_elexis.rb
-elexis::mysql_backup_files: /home/backup/mysql/mysql_backup_*.sql.bz2
+elexis::mysql_main_db_name:     elexis
+elexis::mysql_tst_db_name:      test
+elexis::mysql_main_db_user:     elexis
+elexis::mysql_main_db_password: elexisTest
+# here goes the dump of mysql DB
+elexis::mysql_dump_dir:         /opt/backup/mysql/dumps
+# here goes the backups of the dumps of mysql DB
+elexis::mysql_backup_dir:       /opt/backup/mysql/backups
+elexis::mysql_backup_files:     /opt/backup/mysql/*/elexis.dump*.gz
 
 # These are the default values for PostgreSQL
-elexis::pg_switch_script: /usr/local/bin/pg_switch_db_server.rb
-elexis::pg_load_script: /usr/local/bin/pg_load_elexis.rb
-elexis::pg_dump_script: /usr/local/bin/pg_dump_elexis.rb
-elexis::pg_backup_files: /home/backup/pg/pg_backup_*.sql.bz2
+# here goes the dump of postres DB
+elexis::pg_dump_dir:            /opt/backup/pg/dumps/
+# here goes the backups of the dumps of postres DB
+elexis::pg_backup_dir:          /opt/backup/pg/backups/
+elexis::pg_backup_files:        /opt/backup/pg/*/pg_backup_*.sql
+# next lines must be in sync with dbs
+elexis::pg_main_db_name:     elexis
+elexis::pg_tst_db_name:      test
+elexis::pg_main_db_user:     elexis
+elexis::pg_main_db_password: elexisTest
 
 # Name of first DB-server
 elexis::db_server: server_1_green
