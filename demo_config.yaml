@@ -13,11 +13,8 @@ elexis::hd_external_format_and_encrypt: /usr/local/bin/backup_encrypted.rb
 elexis::hd_external_keyfile: /home/backup/external/id.sdd
 
 # This script must be normal bash scripts or we will have problem
-elexis::install_script: /usr/local/bin/install_elexis
 server::reboot_script: /usr/local/bin/reboot.sh
 server::halt_script:   /usr/local/bin/halt.sh
-
-# Elexis-Vagrant puts all custom binaries into /usr/local/bin
 elexis::install_script: /usr/local/bin/install_elexis.rb
 
 # These are the default values for MySQL

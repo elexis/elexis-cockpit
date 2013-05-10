@@ -245,6 +245,10 @@ class ElexisCockpit < Sinatra::Base
     haml :todo
   end
   
+  get '/error' do
+    haml :error
+  end
+  
   get '/startElexis' do
     @title = 'Elexis starten'
     @elexis_versions = Sinatra::ElexisHelpers.getInstalledElexisVersions
@@ -272,6 +276,8 @@ class ElexisCockpit < Sinatra::Base
       # -Dch.elexis.dbSpec=jdbc:#{params[:dbFlavor]}://#{params[:dbHost]}:#{params[:dbPort]}/#{params[:dbName]}"
       # Could also query for -Dch.elexis.username=test -Dch.elexis.password=test 
      # eg. jdbc:mysql://localhost:3306/elexis
+      cmd = File.join(File.dirname(__FILE__), "mock_scripts", "start.rb") if   ENV['RUNNING_WATIR_TEST']
+      puts "#{request.path_info}: line #{__LINE__}: cmd #{cmd}"
       file = Tempfile.new('runElexis')
       file.puts("#!/bin/bash -v")
       file.puts(cmd + " &") # run in the background
@@ -334,7 +340,8 @@ class ElexisCockpit < Sinatra::Base
     puts "#{request.path_info}: line #{__LINE__}: params #{params.inspect}"
     # dumpFile = 'uploads/' + params['dumpFile'][:filename]
     unless params['dumpFile'] and params['dumpFile'].size > 0 and File.exists?(params['dumpFile'])
-      "#{Time.now}: Fehler: Eine Datei zum laden muss ausgewählt werden!" + $back2home
+      $errorMsg = "#{Time.now}: Fehler: Eine Datei zum laden muss ausgewählt werden!"
+      redirect '/error'
     else
       dumpFile = params['dumpFile'][:tempfile].path
       puts "#{request.path_info}: dumpFile #{dumpFile} exists? #{File.exists?(dumpFile)} size #{File.size(dumpFile)}"
@@ -353,7 +360,8 @@ class ElexisCockpit < Sinatra::Base
     puts "#{request.path_info}: line #{__LINE__}: params #{params}"
     # dumpFile = 'uploads/' + params['dumpFile'][:filename]
     unless params['dumpFile'] 
-      "#{Time.now}: Fehler: Eine Datei zum laden muss ausgewählt werden!" + $back2home
+      $errorMsg =  "#{Time.now}: Fehler: Eine Datei zum laden muss ausgewählt werden!"
+      redirect '/error'
     else
       dumpFile = params['dumpFile'][:tempfile].path
       puts "#{request.path_info}: dumpFile #{dumpFile} exists? #{File.exists?(dumpFile)} size #{File.size(dumpFile)}"
@@ -380,9 +388,11 @@ class ElexisCockpit < Sinatra::Base
     dumpFile = params[:dumpFile]
     loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_hiera("elexis::db_type")}_load_#{whichDb}_db.rb"
     if not File.exists?(loadScript) 
-        "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden" + $back2home 
+      $errorMsg =  "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden"
+      redirect '/error'
     elsif not File.exists?(dumpFile)
-        "#{Time.now}: Fehler dumpFile #{dumpFile} nicht vorhanden" + $back2home     
+      $errorMsg =  "#{Time.now}: Fehler dumpFile #{dumpFile} nicht vorhanden"
+      redirect '/error'
     else
       cmd = "#{loadScript} #{dumpFile}"  
       file = Tempfile.new('loadDatabase')
@@ -419,7 +429,8 @@ class ElexisCockpit < Sinatra::Base
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
       installDir = File.join('/opt', params[:subdir])
-      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::install_script', '/usr/local/bin/install_elexis.rb')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"  
+      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::install_script')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"  
+      puts "get #{__LINE__}: #{request.path_info}: cmd ist #{cmd}"
       settings.set(:batch, nil)
       file = Tempfile.new('installElexis')
       file.puts("#!/bin/bash -v")

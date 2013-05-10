@@ -19,7 +19,7 @@ Port = 9393
 Host = 'localhost'
 
 def createScreenshot(browser, added=nil)
-  puts "createScreenshot: #{ browser.url.split(Port.to_s).inspect} #{added}"  if $VERBOSE
+  puts "createScreenshot: #{ browser.url.split(Port.to_s).inspect} #{added}" # if $VERBOSE
   if browser.url.index('?')
     name = File.join(ImageDest, File.basename(browser.url.split('?')[0]))
   elsif  browser.url.split(Port.to_s)[-1].eql?('/')
@@ -30,6 +30,8 @@ def createScreenshot(browser, added=nil)
   name = "#{name}#{added}.png"
   browser.screenshot.save (name)
   puts "createScreenshot: #{name} done" if $VERBOSE
+  rescue
+    puts "createScreenshot: rescue #{added}" # if $VERBOSE
 end
 
 def startWebApp(webApp)
@@ -166,7 +168,7 @@ end
 
 if $0.eql?( __FILE__)
   startTime = Time.now
-  nrBatchFile2Test = 7 # must be changed manually
+  nrBatchFile2Test = 8 # must be changed manually
   browsers2test.each{
     |whichBrowser|
       res = testElexisCockpit(whichBrowser, File.join(Dir.pwd, 'elexis-cockpit.rb'))

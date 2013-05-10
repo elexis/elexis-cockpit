@@ -24,6 +24,7 @@ batchFiles = [
 'backup_encrypted.rb',
 'reboot.sh',
 'halt.sh',
+'start.rb',
 ]
 
 mock_script_files = batchFiles.map{ |x| File.join(MockScriptDir, x) }
@@ -76,6 +77,7 @@ file ScreenshotTarget => [ :spec, :mock_scripts ] do
     FileUtils.rm_rf(wikiImages)
     # We want to use mocks for the screenshots
     ENV['COCKPIT_CONFIG'] = 'mock_config.yaml'
+    ENV['RUNNING_WATIR_TEST'] = "true"
     okay = system('spec/gen_screenshots.rb')
     if okay then
       out = File.open(ScreenshotTarget, 'w+')
