@@ -270,7 +270,7 @@ class ElexisCockpit < Sinatra::Base
     flavor = 'postgresql' if /pg/i.match(flavor)
     dbHost = 'localhost' 
     unless settings.batch
-      cmd = "nice #{params[:version]}/elexis -vmargs "  +
+      cmd = "DISPLAY=:0 nice #{params[:version]}/elexis -vmargs "  +
            "-Dch.elexis.dbUser=#{params[:dbUser]} -Dch.elexis.dbPw=#{params[:dbPw]} " +
            "-Dch.elexis.dbFlavor=#{flavor} -Dch.elexis.dbSpec=jdbc:#{flavor}://#{dbHost}/#{params[:dbName]}"
       # -Dch.elexis.dbSpec=jdbc:#{params[:dbFlavor]}://#{params[:dbHost]}:#{params[:dbPort]}/#{params[:dbName]}"
