@@ -29,6 +29,8 @@ module Sinatra
   Red    = '#FF3300'
   Orange = '#FFA500'
   White  = '#ffffff'
+  Versions_URL = 'http://ngiger.dyndns.org/elexis/elexisVersions.yaml'
+
  
   def self.get_hiera(key, default_value = nil)
     local_yaml_db   ||= ENV['COCKPIT_CONFIG']
@@ -177,8 +179,7 @@ module Sinatra
   
   def self.getElexisVersionen
     begin
-      urlName = 'http://ngiger.dyndns.org/elexis/elexisVersions.yaml'
-      elexisVarianten = YAML::load_documents( open(urlName))[0]
+      elexisVarianten = YAML::load_documents( open(Versions_URL))[0]
     rescue
       urlName = File.join(File.dirname(File.dirname(__FILE__)), 'elexisVersions.yaml') 
       elexisVarianten =  YAML::load( File.open(urlName) )
