@@ -40,7 +40,7 @@ module Sinatra
       value = config_values[key]
       puts "local config #{local_yaml_db} for #{key} got #{value}" if $VERBOSE
     else
-      hiera_yaml = '/etc/puppet/hiera.yaml'
+      hiera_yaml = '/etc/hiera.yaml'
       scope = '/dev/null'
       value = Hiera.new(:config => hiera_yaml).lookup(key, "'Wert der Variable #{key} unbekannt'", scope)
       puts "#{hiera_yaml}: hiera key #{key} returns #{value}" 
