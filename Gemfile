@@ -20,6 +20,7 @@ end
 gem 'nokogiri'
 gem 'i18n_rails_helpers'
 gem 'haml'
+gem 'rake'
 group :test do
   gem 'watir'
   gem 'watir-webdriver'
