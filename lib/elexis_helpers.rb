@@ -149,15 +149,19 @@ module Sinatra
     mount_points = Filesystem.mounts.select{|m| not /tmp|devpts|proc|sysfs|rootfs|pipefs|fuse|binfmt_misc/.match(m.mount_type) }
     mount_points.each do |m|
       mount_info = Hash.new
-      mp =  Filesystem.stat(m.mount_point);
-      next if mp.blocks_available == 0
-      percentage = 100-((mp.blocks_free.to_f/mp.blocks.to_f)*100).to_i 
-      mount_info[:mount_point] = m.mount_point
-      mount_info[:mount_type]  = m.mount_type
-      mount_info[:percentage]  = percentage
-      mount_info[:background]  = percentage < part_max_fill ? '#0a0' : '#FF0000'
-      mount_info[:human_size]  = getSizeOfMountPoint(m.mount_point)
-      mounts[m.mount_point]    = mount_info
+      begin
+        mp =  Filesystem.stat(m.mount_point);
+        next if mp.blocks_available == 0
+        percentage = 100-((mp.blocks_free.to_f/mp.blocks.to_f)*100).to_i
+        mount_info[:mount_point] = m.mount_point
+        mount_info[:mount_type]  = m.mount_type
+        mount_info[:percentage]  = percentage
+        mount_info[:background]  = percentage < part_max_fill ? '#0a0' : '#FF0000'
+        mount_info[:human_size]  = getSizeOfMountPoint(m.mount_point)
+        mounts[m.mount_point]    = mount_info
+      rescue
+        puts "Failed getting info for #{m.mount_point}. Continue with next"
+      end
     end
     mounts
   end
