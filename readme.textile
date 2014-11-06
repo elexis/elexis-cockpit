@@ -1,13 +1,20 @@
 h1. Elexis-Cockpit.
 
-Eine kleine auf sinatra basierend Applikation um Wartungarbeiten für Elexis einfach auszuführen. 
+Eine kleine auf sinatra basierend Applikation um Wartungarbeiten für Elexis einfach auszuführen.
 
 h2. Dokumentation
 
-Die Dokumentation wird im "Wiki":https://github.com/elexis/elexis-cockpit/wiki geführt. 
+Die Dokumentation wird im "Wiki":https://github.com/elexis/elexis-cockpit/wiki geführt.
 Dort findet man auch "Screenshots":https://github.com/elexis/elexis-cockpit/wiki/Screenshots
 
 Der Code untersteht der GPL v3.0 oder später.
 
 Bei Fragen "Niklaus Giger":mailto:niklaus.giger@member.fsf.org konsultieren
+
+h2. TODO:
+
+Peter Schönbucher:
+* Ask for confirmation before rebooting server
+* Is a shutdown command necessary? (Niklaus wants to make this a configuration)
+* Protect access to page via password
 

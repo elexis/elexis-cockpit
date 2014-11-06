@@ -84,7 +84,7 @@ module Sinatra
     bkpInfo = Hash.new
     maxHours = 24
     maxDays  =  7
-    db_type = get_hiera('elexis::db_type', 'mysql')
+    db_type = get_hiera('elexis::params::db_type', 'mysql')
     puts "db_type ist #{db_type}"
     search_path = get_hiera("elexis::#{db_type}_backup_files")
     puts "search_path ist #{search_path}"
@@ -117,7 +117,7 @@ module Sinatra
     bkpInfo[:dump_script] = "#{bkpPrefix}_dump_#{mainDb}.rb"
     bkpInfo[:load_main]   = "#{bkpPrefix}_load_#{mainDb}_db.rb"
     bkpInfo[:load_test]   = "#{bkpPrefix}_load_#{testDb}_db.rb"
-    bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::db_type')}_backup_files")
+    bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::params::db_type')}_backup_files")
     return bkpInfo
   end
 
@@ -168,16 +168,16 @@ module Sinatra
 
   def self.getDbConfiguration
     info = Hash.new
-    info[:backup_server_is]  = get_hiera('elexis::db_server::backup_server_is')
-    info[:dbServer] = get_hiera('elexis::db_server')
-    info[:dbBackup] = get_hiera('elexis::db_backup')
+    info[:backup_server_is]  = get_hiera('elexis::params::db_server::backup_server_is')
+    info[:dbServer] = get_hiera('elexis::params::db_server')
+    info[:dbBackup] = get_hiera('elexis::params::db_backup')
     info[:dbFlavors] = ['h2', 'mysql', 'postgresql' ]
     info[:dbHosts]  = [ 'localhost' ]
     info[:dbHosts] << :server if info[:server]
     info[:dbHosts] << 'backup' if info[:backup]
-    info[:dbPorts]  = [ get_hiera('elexis::db_port') ]
-    info[:dbUsers]  = [ get_hiera('elexis::db_user')]
-    info[:dbNames]  = [ get_hiera('elexis::db_main')]
+    info[:dbPorts]  = [ get_hiera('elexis::params::db_port') ]
+    info[:dbUsers]  = [ get_hiera('elexis::params::db_user')]
+    info[:dbNames]  = [ get_hiera('elexis::params::db_main')]
     info
   end
   
@@ -193,7 +193,7 @@ module Sinatra
 
   def self.getBackupInfo
     backup = Hash.new 
-    dbType = get_hiera("elexis::db_type")
+    dbType = get_hiera("elexis::params::db_type")
     return get_db_backup_info(dbType)
   end
 
