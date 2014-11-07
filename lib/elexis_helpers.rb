@@ -151,8 +151,8 @@ module Sinatra
       end
     end
     bkpPrefix = "/usr/local/bin/#{db_type}"
-    mainDb    = Sinatra::ElexisHelpers.get_hiera("elexis::db_main")
-    testDb    = Sinatra::ElexisHelpers.get_hiera("elexis::db_test")
+    mainDb    = Sinatra::ElexisHelpers.get_hiera("elexis::params::db_main")
+    testDb    = Sinatra::ElexisHelpers.get_hiera("elexis::params::db_test")
     bkpInfo[:dump_script] = "#{bkpPrefix}_dump_#{mainDb}.rb"
     bkpInfo[:load_main]   = "#{bkpPrefix}_load_#{mainDb}_db.rb"
     bkpInfo[:load_test]   = "#{bkpPrefix}_load_#{testDb}_db.rb"
