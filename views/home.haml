@@ -3,27 +3,28 @@
 %link(rel="stylesheet" href="/public/reset.css")
 %table
   %td{:width => '65%'}
-    %h1{:align => 'center'}
-      Übersicht für Knoten #{@info[:hostname]}
-    %div
-      - if @info[:dbServer]
-        %P DB-Server ist #{@info[:dbServer]}
-      - else
-        %p Kein DB-Server definiert.
-      - if @info[:dbBackup] %p 
-        %p DB-BackupServer ist #{@info[:dbBackup]}    
-      - else
-        %p Kein DB-BackupServer definiert.
-      - if @info[:backup_server_is] 
-        %p Backup-Server für die Datenbank ist #{@info[:backup_server_is]}
-      - else 
-        %p Kein Backup-Server für die Datenbank definiert
-    %br/
+    /
+      %h1{:align => 'center'}
+        Übersicht für Knoten #{@info[:hostname]}
+      %div
+        - if @info[:dbServer]
+          %P DB-Server ist #{@info[:dbServer]}
+        - else
+          %p Kein DB-Server definiert.
+        - if @info[:dbBackup] %p
+          %p DB-BackupServer ist #{@info[:dbBackup]}
+        - else
+          %p Kein DB-BackupServer definiert.
+        - if @info[:backup_server_is]
+          %p Backup-Server für die Datenbank ist #{@info[:backup_server_is]}
+        - else
+          %p Kein Backup-Server für die Datenbank definiert
+      %br/
     %h2{:align => 'center'} Überwachungen
     %br/
     %li{:style=>"background-color: #{@info[:raid].background_colour}"}
       #{@info[:raid].human}
-    - if @info[:backup][:setup_error] 
+    - if @info[:backup][:setup_error]
       %li{:style=>"background-color: #{@info[:backup][:colour]}"}
         #{@info[:backup][:tooltip]}
         Fehler: #{@info[:backup][:okay]} xx
@@ -32,37 +33,38 @@
         #{@info[:backup][:tooltip]}
         #{@info[:backup][:okay]}
     %li Auslastung der eingehängten Partitionen
-    
+
     -#  Ohne http://benogle.com/2009/06/16/simple-css-shiny-progress-bar-technique.html
     -#  hätte Niklaus dies nicht geschafft!! -->
-    - @info[:mounts].each do |id, m|
+    - @info[:mounts].each do |id, m| next if m[:mount_type] == 'vboxsf' #  or  m[:mount_type] =~ /^nfs/
       %p{'padding-bottom' => "10px"}
         .meter-wrap
           .meter-value{:style=>"background-color: #{m[:background]} ; width: #{m[:percentage]}%"}
             .meter-text
-              #{sprintf('Belegt %2d%% von %s FS-typ: %-15s', m[:percentage], m[:human_size], m[:mount_type]) + ' eingehängt in ' + m[:mount_point]}
+              #{sprintf('Belegt %2d%% von %s (%-15s)', m[:percentage], m[:human_size], m[:mount_type]) + ' eingehängt in ' + m[:mount_point]}
   %td
     %h2 Wartungsarbeiten
+    %br
     %li
       %a{:href => "installElexis"} Neueste (Med)-Elexis Version installieren
 
     %li
       %a{:href => "startElexis"} starte beliebige Elexis/Datenbank-Kombination
 
-    - if @info[:backup][:dump_script] 
+    - if @info[:backup][:dump_script]
       %form{ :action => "/run_dbBackup", :method => "post"}
         %li
-          %input{:type => "submit", :name => "runDbBackup", 
+          %input{:type => "submit", :name => "runDbBackup",
           :value => "Datenbank-Backup ausführen", :class => "button"}
     - else
       %form{ :action => "/run_dbBackup", :method => "post"}
         %li
           Fehler: Kein Backup-Script konfiguriert
-          
+
     %form{ :action => "/run_backup2external", :method => "post"}
       %li
         %input{:type => "submit", :name => "runBackup2external", :value => "Backup auf externe Festplatte", :class => "button"}
-        
+
     %li
       %a{:href => "formatEncrypted"} Verschlüsselte Partition auf externer Festplatte erstellen
 
