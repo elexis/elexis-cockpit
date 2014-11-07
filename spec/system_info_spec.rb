@@ -107,10 +107,14 @@ devs_ng =%(
   it "should work at niklaus giger place" do
     mounts_ng = YAML.load_file(File.join(File.dirname(__FILE__), "mounts.ng"))
     candidates = Sinatra::ElexisHelpers.getPossibleExternalDiskDrives(mounts_ng, YAML.load(devs_ng))
-    unless Socket.gethostname.match(/giger/i)
+    fqdn = Socket.gethostbyname(Socket.gethostname).first
+    if fqdn.match(/giger/i)
+      puts "Okay: #{fqdn}"
       candidates.size.should == 1
       candidates['/dev/sdc'].should_not be_nil
       candidates['/dev/sdd'].should     be_nil
+    else
+      puts "skip running niklaus: #{fqdn}"
     end
   end
 
