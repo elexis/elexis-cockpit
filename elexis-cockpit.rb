@@ -112,7 +112,7 @@ class ElexisCockpit < Sinatra::Base
         @batchParams = batchFile.split(' ').size == 1 ? nil : batchFile.split(' ')[1..-1]
         puts "new BatchRunner #{@batchFile} params #{@batchParams}"
       else
-        @batchFile  =  "unknown batch file"
+        @batchFile  =  "unknown batch file. Called from  #{caller[0..3].join("\n")}"
       end
       @finished   = false
       @okMsg      = "<div width='500px' style='background-color: #00FF00'  >#{okMsg}</div>"
@@ -390,11 +390,12 @@ class ElexisCockpit < Sinatra::Base
   get '/run_loadDatabase' do
     puts "get #{__LINE__}: #{request.path_info}: params 0"
     puts "get #{__LINE__}: #{request.path_info}: params #{params.inspect}"
-    puts "get #{__LINE__}: #{params[:dumpFile].inspect}"
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     whichDb = params[:whichDb]
     dumpFile = params[:dumpFile]
-    loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_hiera("elexis::db_type")}_load_#{whichDb}_db.rb"
+    puts "get #{__LINE__}: #{request.path_info} #{params.inspect} whichDb #{whichDb}"
+    loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_hiera("elexis::params::db_type")}_load_#{whichDb}_db.rb"
+    puts "get #{__LINE__}:loadScript  #{loadScript}"
     if not File.exists?(loadScript)
       $errorMsg =  "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden"
       redirect '/error'
@@ -454,7 +455,7 @@ class ElexisCockpit < Sinatra::Base
     settings.batch.runBatch
   end
 
-  switchDbServer = BatchRunner.new("elexis::#{Sinatra::ElexisHelpers.get_hiera("elexis::db_type")}_switch_script",
+  switchDbServer = BatchRunner.new("elexis::#{Sinatra::ElexisHelpers.get_hiera("elexis::params::db_type")}_switch_script",
                                         'Elexis-Datenbank Server umschalten',
                                         'Elexis-Datenbank Server umgeschalten',
                                         'Fehler beim Umschalten des Elexis-Datenbank Servers')
@@ -472,14 +473,14 @@ class ElexisCockpit < Sinatra::Base
   puts "reboot cmd ist #{cmd}"
   reboot = BatchRunner.new(cmd.clone,
                                     'Server neu starten',
-                                    'Server sollte jetzt neu starten',
+                                    'Server sollte nach 1 Minute neu starten',
                                     'Fehler beim Neustarten des Servers')
   reboot.createPages(self, 'reboot')
 
   cmd  = Sinatra::ElexisHelpers.get_hiera("server::halt_script", '/usr/local/bin/halt.sh')
   halt = BatchRunner.new(cmd.clone,
                                     'Server anhalten',
-                                    'Server sollte jetzt anhalten',
+                                    'Server sollte nach 1 Minute anhalten',
                                     'Fehler beim Anhalten des Servers')
   halt.createPages(self, 'halt')
 

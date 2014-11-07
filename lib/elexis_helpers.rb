@@ -49,6 +49,8 @@ module Sinatra
         else
           return "/opt/backup/pg/*/pg_backup_*.sql"
         end
+      when /hd_external_keyfile/
+        return '/etc/backup.key'
       when 'elexis::params::db_server'
         return 'server'
       when 'elexis::params::db_backup'
@@ -71,7 +73,7 @@ module Sinatra
       config_values = YAML.load_file(local_yaml_db)
       value = config_values[key]
       puts "local config #{local_yaml_db} for #{key} got #{value}" if $VERBOSE
-    else
+    elsif defined?(Hiera)
       hiera_yaml = '/etc/hiera.yaml'
       scope = '/dev/null'
       value = Hiera.new(:config => hiera_yaml).lookup(key, nil, scope)
@@ -158,6 +160,7 @@ module Sinatra
     bkpInfo[:load_main]   = "#{bkpPrefix}_load_#{mainDb}_db.rb"
     bkpInfo[:load_test]   = "#{bkpPrefix}_load_#{testDb}_db.rb"
     bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::params::db_type')}_backup_files")
+    puts "get_db_backup_info #{which_one} returns #{bkpInfo[:dump_script]} #{bkpInfo[:load_main]} #{bkpInfo[:load_test]}"
     return bkpInfo
   end
 

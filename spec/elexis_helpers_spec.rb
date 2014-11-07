@@ -19,4 +19,13 @@ describe "ElexisHelpers" do
     puts "reboot cmd ist #{cmd}"
     cmd.should == '/usr/local/bin/reboot.sh'
   end
+
+  it "should be okay for db main" do
+    x = Sinatra::ElexisHelpers.get_db_backup_info('main')[:dump_script]
+    x.should_not match /unkown|unbekannt/
+    x =  Sinatra::ElexisHelpers.get_db_backup_info('db_main')[:dump_script]
+    x.should_not match /unkown|unbekannt/
+    x = Sinatra::ElexisHelpers.get_db_backup_info('db_test')[:dump_script]
+    x.should_not match /unkown|unbekannt/
+  end
 end
