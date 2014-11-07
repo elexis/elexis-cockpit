@@ -1,0 +1,12 @@
+---
+language: ruby
+cache: bundler
+bundler_args: --without development
+script: "bundle exec rake spec"
+matrix:
+  fast_finish: true
+  include:
+  - rvm: 1.9.3
+  - rvm: 2.1.2
+notifications:
+  email: niklaus.giger@member.fsf.org

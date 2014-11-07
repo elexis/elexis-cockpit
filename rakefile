@@ -1,13 +1,19 @@
+#!/usr/bin/env rake
 # encoding: utf-8
-require 'rspec/core'
-require 'rspec/core/rake_task'
 require 'fileutils'
 require 'rake/clean'
 
-task :default => :spec
- 
-desc "Run all specs in spec directory (excluding plugin specs)"
-RSpec::Core::RakeTask.new(:spec)
+
+begin
+  task :default => :spec
+  desc "Run all specs in spec directory"
+  task :spec do
+    fail unless system("bundle exec rspec spec")
+  end
+  require 'rspec/core/rake_task'
+  # don't know why I must use it with an external command
+  # RSpec::Core::RakeTask.new(:spec)
+end
 
 MockScriptDir = File.join(Dir.pwd, 'mock_scripts')
 
@@ -58,7 +64,7 @@ task :mock_scripts => file('mock_config.yaml')
 file 'mock_config.yaml' => 'demo_config.yaml'  do |t|
   src    = 'demo_config.yaml'
   target = 'mock_config.yaml'
-  unless uptodate?(target, [ src ]) 
+  unless uptodate?(target, [ src ])
     puts "Patching #{target} to use scrpts from #{MockScriptDir}"
     inhalt = IO.readlines(src)
     out = File.open(target, 'w+')
@@ -81,7 +87,7 @@ file ScreenshotTarget => [ :spec, :mock_scripts ] do
     okay = system('spec/gen_screenshots.rb')
     if okay then
       out = File.open(ScreenshotTarget, 'w+')
-      out.puts "Watir-Tests did run successfully on #{Time.now}"    
+      out.puts "Watir-Tests did run successfully on #{Time.now}"
       out.puts "Created #{Dir.glob(wikiImages+'/*.png').size} screenshots in #{wikiImages}"
     end
   end
