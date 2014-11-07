@@ -2,7 +2,7 @@
 # encoding: utf-8
 # Elexis-Cockpit. Eine kleine auf sinatra basierend Applikation
 # um Wartungarbeiten für Elexis einfach auszuführen.
-# 
+#
 # Copyright (C) 2013 Niklaus Giger <niklaus.giger@member.fsf.org>
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,39 @@ module Sinatra
   White  = '#ffffff'
   Versions_URL = 'http://ngiger.dyndns.org/elexis/elexisVersions.yaml'
 
- 
+  # please keep get_elexis_default in sync with elexis::params!
+  @@db_type = nil
+  attr_reader :value
+  def self.get_elexis_default(key)
+    case key
+      when "elexis::params::db_type"
+        @@db_type = 'mysql'
+        return @@db_type
+      when "elexis::params::db_main"
+        return 'elexis'
+      when "elexis::params::db_test"
+        return 'test'
+      when /elexis.*_backup_files$/
+        if @@db_type == 'mysql'
+          return "/opt/backup/mysql/*/elexis.dump*.gz"
+        else
+          return "/opt/backup/pg/*/pg_backup_*.sql"
+        end
+      when 'elexis::params::db_server'
+        return 'server'
+      when 'elexis::params::db_backup'
+        return 'backup'
+      when 'elexis::params::db_user'
+        return 'elexis'
+      when 'elexis::params::db_server::backup_server_is'
+        return 'backup'
+      when 'elexis::params::db_port'
+        return 'db_port_default'
+      default
+        return nil
+    end
+  end
+
   def self.get_hiera(key, default_value = nil)
     local_yaml_db   ||= ENV['COCKPIT_CONFIG']
     local_yaml_db   ||= File.join(File.dirname(File.dirname(__FILE__)), 'local_config.yaml')
@@ -43,13 +75,14 @@ module Sinatra
       hiera_yaml = '/etc/hiera.yaml'
       scope = '/dev/null'
       value = Hiera.new(:config => hiera_yaml).lookup(key, "'Wert der Variable #{key} unbekannt'", scope)
-      puts "#{hiera_yaml}: hiera key #{key} returns #{value}" 
+      puts "#{hiera_yaml}: hiera key #{key} returns #{value}"
     end
-    value = default_value if default_value and not value
+    value ||= get_elexis_default(key)
+    value ||= default_value
     value
   end
-  
-  # next function courtesy of 
+
+  # next function courtesy of
   # http://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable
   def self.getReadableFileSizeString(fileSizeInBytes)
       i = -1;
@@ -63,7 +96,7 @@ module Sinatra
 #      return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i]
       return (fileSizeInBytes > 0.1 ? fileSizeInBytes.to_s : 1.to_s)+ byteUnits[i]
   end
-  
+
   def self.distance_of_time_in_words_to_now(time)
     if defined?(ActionView::Helpers::DateHelper.distance_of_time_in_words_to_now)
       return ActionView::Helpers::DateHelper.distance_of_time_in_words_to_now(time)
@@ -71,7 +104,7 @@ module Sinatra
       human = (Time.now - time).to_i.to_s + ' Sekunden'
     end
   end
-  
+
   def self.distance_of_time_in_words(later, older)
     if defined?(ActionView::Helpers::DateHelper.distance_of_time_in_words)
       return ActionView::Helpers::DateHelper.distance_of_time_in_words(later, older)
@@ -79,7 +112,7 @@ module Sinatra
       human = (later - older).to_i.to_s + ' Sekunden'
     end
   end
-  
+
   def self.get_db_backup_info(which_one)
     bkpInfo = Hash.new
     maxHours = 24
@@ -88,20 +121,26 @@ module Sinatra
     puts "db_type ist #{db_type}"
     search_path = get_hiera("elexis::#{db_type}_backup_files")
     puts "search_path ist #{search_path}"
-    backups =  Dir.glob(search_path)
+    backups =  search_path ? Dir.glob(search_path) : []
+    if backups.size == 0 # try default value
+      search_path2 = "/opt/backup/#{db_type}/*/elexis.dump*.gz"
+      puts "search_path2 ist #{search_path2}"
+      backups =  Dir.glob(search_path2)
+    end
     bkpInfo[:backups] = backups
     if  bkpInfo[:backups].size == 0
+      bkpInfo[:backups] = backups
       bkpInfo[:colour] = Red
-      bkpInfo[:okay] = "Keine Backup_Dateien via '#{search_path}' gefunden"
+      bkpInfo[:okay] = "Keine Backup_Dateien via '#{search_path}' oder '#{search_path2}' gefunden"
       bkpInfo[:backup_tooltip] = "Fehlschlag. Bitte beheben Sie das Problem"
     else
       neueste = backups[0]
       modificationTime = File.mtime(neueste)
       human = self.distance_of_time_in_words(Time.now, modificationTime)
-      if ((Time.now - modificationTime) > maxDays*24*60*60)      
+      if ((Time.now - modificationTime) > maxDays*24*60*60)
         bkpInfo[:okay] = "Neueste Backup-Datei '#{neueste}' erstellt vor #{human} ist älter als #{maxDays} Tage"
         bkpInfo[:backup_tooltip] = "Fehlschlag. Fand #{backups.size} Backup-Dateien via '#{search_path}'"
-      elsif ((Time.now - modificationTime) > maxHours*60*60)      
+      elsif ((Time.now - modificationTime) > maxHours*60*60)
         bkpInfo[:colour] = Orange
         bkpInfo[:okay] = "Neueste Backup-Datei '#{neueste}' erstellt vor #{human} ist älter als #{maxHours} Stunden!"
         bkpInfo[:backup_tooltip] = "Fehlschlag. Fand #{backups.size} Backup-Dateien via '#{search_path}'"
@@ -112,8 +151,8 @@ module Sinatra
       end
     end
     bkpPrefix = "/usr/local/bin/#{db_type}"
-    mainDb    = Sinatra::ElexisHelpers.get_hiera("elexis::#{db_type}_main_db_name")
-    testDb    = Sinatra::ElexisHelpers.get_hiera("elexis::#{db_type}_test_db_name")
+    mainDb    = Sinatra::ElexisHelpers.get_hiera("elexis::db_main")
+    testDb    = Sinatra::ElexisHelpers.get_hiera("elexis::db_test")
     bkpInfo[:dump_script] = "#{bkpPrefix}_dump_#{mainDb}.rb"
     bkpInfo[:load_main]   = "#{bkpPrefix}_load_#{mainDb}_db.rb"
     bkpInfo[:load_test]   = "#{bkpPrefix}_load_#{testDb}_db.rb"
@@ -143,9 +182,9 @@ module Sinatra
     mp =  Filesystem.stat(mount_point)
     getReadableFileSizeString(mp.blocks * mp.block_size)
   end
-  
+
   def self.getMountInfo(mounts = Hash.new)
-    part_max_fill = 85  
+    part_max_fill = 85
     mount_points = Filesystem.mounts.select{|m| not /tmp|devpts|proc|sysfs|rootfs|pipefs|fuse|binfmt_misc/.match(m.mount_type) }
     mount_points.each do |m|
       mount_info = Hash.new
@@ -180,19 +219,19 @@ module Sinatra
     info[:dbNames]  = [ get_hiera('elexis::params::db_main')]
     info
   end
-  
+
   def self.getElexisVersionen
     begin
       elexisVarianten = YAML::load_documents( open(Versions_URL))[0]
     rescue
-      urlName = File.join(File.dirname(File.dirname(__FILE__)), 'elexisVersions.yaml') 
+      urlName = File.join(File.dirname(File.dirname(__FILE__)), 'elexisVersions.yaml')
       elexisVarianten =  YAML::load( File.open(urlName) )
     end
     elexisVarianten
   end
 
   def self.getBackupInfo
-    backup = Hash.new 
+    backup = Hash.new
     dbType = get_hiera("elexis::params::db_type")
     return get_db_backup_info(dbType)
   end
@@ -205,15 +244,15 @@ module Sinatra
     info[:raid]   = RaidInfo.new()
     info
   end
-  
+
   AvoidBasicPoints = [ '/', '/home', '/usr', '/var', '/tmp', '/opt' ]
   def self.getPossibleExternalDiskDrives(injectMounts = nil, injectDevices = nil, injectMdStat = nil)
     avoid = []
     mounts = injectMounts ? injectMounts : Filesystem.mounts
-    mounts.each{ |x| 
+    mounts.each{ |x|
                             if AvoidBasicPoints.index(x.mount_point)
                               next if /rootfs/.match(x.name)
-                              File.symlink?(x.name) ? avoid << File.realpath(x.name).chop : avoid << x.name.chop 
+                              File.symlink?(x.name) ? avoid << File.realpath(x.name).chop : avoid << x.name.chop
                           end
                           }
     externals = Hash.new
@@ -224,7 +263,7 @@ module Sinatra
     chopped = mdComponents ?  mdComponents.each{ |deviceName| deviceName.chop! }.sort!.uniq! : nil
     ((devices.collect{ |x| x.chop }.sort.uniq) - avoid).each {
       |mtPoint|
-          if injectMounts 
+          if injectMounts
             externals[mtPoint]  = 'injected: '+ mtPoint
           else
             mp =  Filesystem.stat(mtPoint);
@@ -237,20 +276,20 @@ module Sinatra
     }
     externals
   end
-  
+
   @crossRef = Hash.new
-  
+
   def self.setRunnerForPath(path, runner)
     @crossRef = Hash.new unless defined?(@crossRef)
     @crossRef[path] = runner
     puts "#{__LINE__}: #{@crossRef.inspect}" if $VERBOSE
   end
-  
+
   def self.getRunnerForPath(path)
-    puts "#{__LINE__}: #{@crossRef.inspect}" if $VERBOSE   
+    puts "#{__LINE__}: #{@crossRef.inspect}" if $VERBOSE
     @crossRef[path]
   end
-  
+
     # Supports only Linux md via /proc/mdstat!
     # see https://raid.wiki.kernel.org/index.php/Mdstat
     class RaidInfo
@@ -260,19 +299,19 @@ module Sinatra
       OkayPattern = /Alle RAID.*okay/
       DegradedPattern = /degraded/
       NoRAID          = 'Kein RAID Festplatten gefunden'
-      
+
       attr_reader :degraded, :active, :raw, :components, :background_colour
-      
+
       def human
         return NoRAID unless @raw
-        msg  = "RAID-Partitionen #{@components.collect{ |x,y| x}.inspect}: " 
-        msg += @degraded.size > 0 ? "Warnung: haben schlechte Festplatten in #{@degraded.join(' ')} (degraded)" : 
+        msg  = "RAID-Partitionen #{@components.collect{ |x,y| x}.inspect}: "
+        msg += @degraded.size > 0 ? "Warnung: haben schlechte Festplatten in #{@degraded.join(' ')} (degraded)" :
               "Alle RAID okay"
       end
-      
+
       def initialize(mdStatFile = MdStat, content = nil)
         if content == nil
-          @raw = IO.read(mdStatFile) if File.exists?(mdStatFile)           
+          @raw = IO.read(mdStatFile) if File.exists?(mdStatFile)
         else
           @raw = content
         end
@@ -282,11 +321,11 @@ module Sinatra
         @degraded = Array.new
         @components = Hash.new
         current = nil
-        @raw.split("\n").each { 
+        @raw.split("\n").each {
           |line|
           next if /^Personalities|^unused/.match(line)
           if m = MatchAssemblyOfTwo.match(line)
-            if m[2].eql?('active')              
+            if m[2].eql?('active')
               @active << m[1]
               current = m[1]
               @components[m[1].clone] = Array.new
@@ -299,19 +338,19 @@ module Sinatra
             @degraded << current if /_/.match(m[1])
           end
         }
-          @background_colour = Orange if @degraded.size > 0 
+          @background_colour = Orange if @degraded.size > 0
       end
-      
+
       def getComponents(mdpartition)
         @components ? @components[mdpartition] : nil
       end
-      
+
     end
   end
-  
-  
+
+
   # Skip registering when running as sinatra app
-  if defined?(register) 
+  if defined?(register)
     # this will only affect Sinatra::Application
     register ElexisHelpers
   end
