@@ -14,4 +14,9 @@ describe "ElexisHelpers" do
     Sinatra::ElexisHelpers.get_elexis_default('elexis::params::db_type').should == 'mysql'
   end
 
+  it "should be okay for the reboot script" do
+    cmd = Sinatra::ElexisHelpers.get_hiera("server::reboot_script", '/usr/local/bin/reboot.sh')
+    puts "reboot cmd ist #{cmd}"
+    cmd.should == '/usr/local/bin/reboot.sh'
+  end
 end
