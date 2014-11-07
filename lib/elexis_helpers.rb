@@ -75,9 +75,10 @@ module Sinatra
       hiera_yaml = '/etc/hiera.yaml'
       scope = '/dev/null'
       value = Hiera.new(:config => hiera_yaml).lookup(key, "'Wert der Variable #{key} unbekannt'", scope)
-      puts "#{hiera_yaml}: hiera key #{key} returns #{value}"
+      puts "#{hiera_yaml}: hiera key #{key} returns #{value}" if $VERBOSE
     end
     value ||= get_elexis_default(key)
+    puts "#{hiera_yaml} #{__LINE__}: hiera key #{key} use default_value #{default_value}" unless value
     value ||= default_value
     value
   end

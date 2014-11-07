@@ -110,7 +110,7 @@ class ElexisCockpit < Sinatra::Base
       if batchFile
         @batchFile  =  batchFile.split(' ')[0]
         @batchParams = batchFile.split(' ').size == 1 ? nil : batchFile.split(' ')[1..-1]
-        puts "running #{@batchFile} params #{@batchParams}"
+        puts "new BatchRunner #{@batchFile} params #{@batchParams}"
       else
         @batchFile  =  "unknown batch file"
       end
@@ -468,7 +468,7 @@ class ElexisCockpit < Sinatra::Base
 
   backup2external.createPages(self, 'backup2external')
 
-  cmd = Sinatra::ElexisHelpers.get_hiera("server::reboot_script", '/sbin/reboot')
+  cmd = Sinatra::ElexisHelpers.get_hiera("server::reboot_script", '/usr/local/bin/reboot.sh')
   puts "reboot cmd ist #{cmd}"
   reboot = BatchRunner.new(cmd.clone,
                                     'Server neu starten',
@@ -476,7 +476,7 @@ class ElexisCockpit < Sinatra::Base
                                     'Fehler beim Neustarten des Servers')
   reboot.createPages(self, 'reboot')
 
-  cmd  = Sinatra::ElexisHelpers.get_hiera("server::halt_script", '/sbin/halt')
+  cmd  = Sinatra::ElexisHelpers.get_hiera("server::halt_script", '/usr/local/bin/halt.sh')
   halt = BatchRunner.new(cmd.clone,
                                     'Server anhalten',
                                     'Server sollte jetzt anhalten',
