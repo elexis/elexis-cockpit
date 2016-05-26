@@ -155,6 +155,7 @@ class ElexisCockpit < Sinatra::Base
       context.post runnerName do
         puts "line #{__LINE__}: post #{__LINE__}: #{request.path_info}: params #{params}.inspect"
         settings.set(:batch, nil)
+        settings.set(:lock, true);
         redirect runnerName
       end
 
@@ -258,6 +259,7 @@ class ElexisCockpit < Sinatra::Base
     settings.set(:info, @info)
     @title = 'Übersicht'
     settings.set(:batch, nil)
+    settings.set(:lock, true);
     haml :home
   end
 
@@ -288,6 +290,7 @@ class ElexisCockpit < Sinatra::Base
     puts "line #{__LINE__}: post #{request.path_info}: params #{params}"
     query = params.map{|key, value| "#{key}=#{value}"}.join("&")
     settings.set(:batch, nil)
+    settings.set(:lock, true);
     redirect "/run_startElexis?#{query}"
   end
 
@@ -338,6 +341,7 @@ class ElexisCockpit < Sinatra::Base
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     device = params[:device]
     settings.set(:batch, nil)
+    settings.set(:lock, true);
     redirect "/run_formatting?device=#{device}"
   end  # start the server if ruby file executed directly
 
@@ -374,6 +378,7 @@ class ElexisCockpit < Sinatra::Base
       dumpFile = params['dumpFile'][:tempfile].path
       puts "#{request.path_info}: dumpFile #{dumpFile} exists? #{File.exists?(dumpFile)} size #{File.size(dumpFile)}"
       settings.set(:batch, nil)
+      settings.set(:lock, true);
       puts "#{request.path_info}: line #{__LINE__}: params #{params}"
       redirectUrl =  "/run_loadDatabase?whichDb=#{params[:whichDb]}&dumpFile=#{dumpFile}"
       redirect redirectUrl
@@ -394,6 +399,7 @@ class ElexisCockpit < Sinatra::Base
       dumpFile = params['dumpFile'][:tempfile].path
       puts "#{request.path_info}: dumpFile #{dumpFile} exists? #{File.exists?(dumpFile)} size #{File.size(dumpFile)}"
       settings.set(:batch, nil)
+      settings.set(:lock, true);
       puts "#{request.path_info}: line #{__LINE__}: params #{params}"
       redirectUrl =  "/run_loadDatabase?whichDb=#{params[:whichDb]}&dumpFile=#{dumpFile}"
       redirect redirectUrl
@@ -404,6 +410,7 @@ class ElexisCockpit < Sinatra::Base
     puts "line #{__LINE__}: post #{request.path_info}: params #{params}"
     query = params.map{|key, value| "#{key}=#{value}"}.join("&")
     settings.set(:batch, nil)
+    settings.set(:lock, true);
     redirect "/run_loadDatabase?#{query}"
   end
 
@@ -415,6 +422,7 @@ class ElexisCockpit < Sinatra::Base
     dumpFile = params[:dumpFile]
     puts "get #{__LINE__}: #{request.path_info} #{params.inspect} whichDb #{whichDb}"
     loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_config("elexis::db_type")}_load_#{whichDb}_db.rb"
+    settings.set(:lock, true);
     puts "get #{__LINE__}:loadScript  #{loadScript}"
     if not File.exists?(loadScript)
       $errorMsg =  "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden"
@@ -449,6 +457,7 @@ class ElexisCockpit < Sinatra::Base
     puts "line #{__LINE__}: post #{request.path_info}: params #{params}"
     query = params.map{|key, value| "#{key}=#{value}"}.join("&")
     settings.set(:batch, nil)
+    settings.set(:lock, true);
     redirect "/run_installElexis?#{query}"
   end
 
@@ -461,6 +470,7 @@ class ElexisCockpit < Sinatra::Base
       cmd = "#{Sinatra::ElexisHelpers.get_config('elexis::install_script')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"
       puts "get #{__LINE__}: #{request.path_info}: cmd ist #{cmd}"
       settings.set(:batch, nil)
+      settings.set(:lock, true);
       file = Tempfile.new('installElexis')
       file.puts("#!/bin/bash -v")
       file.puts(cmd) # Wait till finished
