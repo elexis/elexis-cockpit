@@ -3,9 +3,9 @@ Damit wird die Testdatenbank gelöscht und mit dem Inhalt des Backups überschri
 %h2 
   Pfad der Backup-Datei selber auswählen
   %form(method="post" enctype='multipart/form-data')   
-    %input(type='file' name='dumpFile')    
+    %input(type='file' name='dumpFile')
     %br
-    %input{:type => 'hidden', :name => "whichDb", :value => "main" }
+    %input{:type => 'hidden', :name => "whichDb", :value => "test" }
     %input(type='submit' value='Backup einlesen')
 %br/
 - bkpInfo = Sinatra::ElexisHelpers.getBackupInfo; 
