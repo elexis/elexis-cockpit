@@ -71,6 +71,7 @@ require 'socket'
 # require 'action_view'
 # include ActionView::Helpers::DateHelper
 require 'haml'
+require 'thread'
 
 DataMapper::setup(:default, "sqlite3://#{Dir.pwd}/demo.db")
 
@@ -101,6 +102,7 @@ end
 class ElexisCockpit < Sinatra::Base
   register Sinatra::ElexisHelpers
   @batch = nil
+  @@cockpitMutex ||= Mutex.new
 
   helpers do
     include Rack::Utils
@@ -120,6 +122,7 @@ class ElexisCockpit < Sinatra::Base
     attr_reader   :startTime, :batchFile, :title, :info
     $info = nil
     $back2home = "<p><a href='/'>Zurück zur Hauptseite</a></p>"
+    @@batchMutex ||= Mutex.new
 
     def initialize(batchFile,
                   title="#{File.basename(batch_file)} ausführen",
@@ -142,10 +145,12 @@ class ElexisCockpit < Sinatra::Base
 
     def createPages(context, name)
       runnerName = '/run_'+name
-      puts "createPages #{runnerName} batch #{@batchFile}"
-      @batchInfo = nil
-      puts (self.methods - Object.methods).inspect
-      Sinatra::ElexisHelpers.setRunnerForPath(runnerName, self.clone)
+      @@batchMutex.synchronize do
+        puts "createPages #{runnerName} batch #{@batchFile}"
+        @batchInfo = nil
+        puts (self.methods - Object.methods).inspect
+        Sinatra::ElexisHelpers.setRunnerForPath(runnerName, self.clone)
+      end
 
       context.get '/'+name do
         puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
@@ -160,73 +165,77 @@ class ElexisCockpit < Sinatra::Base
       end
 
       context.get runnerName do
-        # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-        puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
-        puts "get #{__LINE__}: #{request.path_info}: getRunnerForPath #{Sinatra::ElexisHelpers.getRunnerForPath(request.path_info)}.inspect"
+        @@batchMutex.synchronize do
+          # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
+          puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
+          puts "get #{__LINE__}: #{request.path_info}: getRunnerForPath #{Sinatra::ElexisHelpers.getRunnerForPath(request.path_info)}.inspect"
 
-        # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-        unless settings.batch
-          cmd = "#{@batchFile} #{@batchParams}"
-          puts "runnerName #{runnerName} cmd #{cmd} @batchFile #{@batchFile}"
-          if defined?(cmd)
-            file = Tempfile.new(name)
-            file.puts("#!/bin/bash -v")
-            file.puts(cmd) # Wait till finished
-            file.close
-            File.chmod(0755, file.path)
+          # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
+          unless settings.batch
+            cmd = "#{@batchFile} #{@batchParams}"
+            puts "runnerName #{runnerName} cmd #{cmd} @batchFile #{@batchFile}"
+            if defined?(cmd)
+              file = Tempfile.new(name)
+              file.puts("#!/bin/bash -v")
+              file.puts(cmd) # Wait till finished
+              file.close
+              File.chmod(0755, file.path)
+            end
+            settings.set(:batch, Sinatra::ElexisHelpers.getRunnerForPath(request.path_info))
           end
-          settings.set(:batch, Sinatra::ElexisHelpers.getRunnerForPath(request.path_info))
+          @title = self.title
+          settings.batch.runBatch
         end
-        @title = self.title
-        settings.batch.runBatch
-      end
 
+      end
     end
 
     def runBatch
       # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-      unless @batchFile
-        "<h1>Fehler beim Setup @batchFile ist nicht definiert! <h1>"
-        return
-      end
-      if @batchFile.length < 2 or not File.exists?(@batchFile) or not File.executable?(@batchFile)
-        "#{Time.now}: Fehler in der Konfiguration. Datei '#{@batchFile}' kann nicht ausgeführt werden" + $back2home
-      else
-        cmd = @batchFile
-        cmd += " #{@batchParams.join(' ')}" if @batchParams
-        @startTime = Time.now unless @startTime
-        @workThread = Thread.new do
-          begin
-            puts "running #{cmd}"
-            @result = system(cmd)
-            puts "#{cmd} returned #{@result}"
-          rescue
-            puts "rescue for #{cmd}"
-            @result = false
-          end
-          @endTime = Time.now
-          @finished = true
-        end if not @finished and not @workThread
-        if @finished
-          diffSeconds = (@endTime-@startTime).to_i
-          display = "<h3>Arbeit beendet (nach #{diffSeconds} Sekunden).</h3>"
-          display += $back2home
-          display += @result ? @okMsg : @errMsg
+      @@batchMutex.synchronize do
+        unless @batchFile
+          "<h1>Fehler beim Setup @batchFile ist nicht definiert! <h1>"
+          return
+        end
+        if @batchFile.length < 2 or not File.exists?(@batchFile) or not File.executable?(@batchFile)
+          "#{Time.now}: Fehler in der Konfiguration. Datei '#{@batchFile}' kann nicht ausgeführt werden" + $back2home
         else
-          diffSeconds = (Time.now-@startTime).to_i
-          display = '<head><meta charset="utf8" http-equiv="refresh" content="1" ></head>'
-          display += "\n<h3>Arbeit ist seit #{diffSeconds} Sekunden am laufen.</h3>"
-          display += "<p>Seite neu laden, um zu sehen, ob das Programm weiterhin läuft.</p>"
+          cmd = @batchFile
+          cmd += " #{@batchParams.join(' ')}" if @batchParams
+          @startTime = Time.now unless @startTime
+          @workThread = Thread.new do
+            begin
+              puts "running #{cmd}"
+              @result = system(cmd)
+              puts "#{cmd} returned #{@result}"
+            rescue
+              puts "rescue for #{cmd}"
+              @result = false
+            end
+            @endTime = Time.now
+            @finished = true
+          end if not @finished and not @workThread
+          if @finished
+            diffSeconds = (@endTime-@startTime).to_i
+            display = "<h3>Arbeit beendet (nach #{diffSeconds} Sekunden).</h3>"
+            display += $back2home
+            display += @result ? @okMsg : @errMsg
+          else
+            diffSeconds = (Time.now-@startTime).to_i
+            display = '<head><meta charset="utf8" http-equiv="refresh" content="1" ></head>'
+            display += "\n<h3>Arbeit ist seit #{diffSeconds} Sekunden am laufen.</h3>"
+            display += "<p>Seite neu laden, um zu sehen, ob das Programm weiterhin läuft.</p>"
+          end
+          content = 'unbekannt. Wahrscheinlich eine Exe-Datei.'
+          begin
+            content = IO.read(@batchFile).gsub("\n", "<br>")
+          rescue
+          end
+          display += "<p>Befehl: '#{cmd} '</p>"
+          display += "<p>Startzeit: #{@startTime}</p>"
+          display += "<p>Inhalt der Batchdatei ist</p><p>#{content}</p>"
+          @info ? display + @info.to_s : display
         end
-        content = 'unbekannt. Wahrscheinlich eine Exe-Datei.'
-        begin
-          content = IO.read(@batchFile).gsub("\n", "<br>")
-        rescue
-        end
-        display += "<p>Befehl: '#{cmd} '</p>"
-        display += "<p>Startzeit: #{@startTime}</p>"
-        display += "<p>Inhalt der Batchdatei ist</p><p>#{content}</p>"
-        @info ? display + @info.to_s : display
       end
     end
   end
@@ -415,36 +424,38 @@ class ElexisCockpit < Sinatra::Base
   end
 
   get '/run_loadDatabase' do
-    puts "get #{__LINE__}: #{request.path_info}: params 0"
-    puts "get #{__LINE__}: #{request.path_info}: params #{params.inspect}"
-    # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    whichDb = params[:whichDb]
-    dumpFile = params[:dumpFile]
-    puts "get #{__LINE__}: #{request.path_info} #{params.inspect} whichDb #{whichDb}"
-    loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_config("elexis::db_type")}_load_#{whichDb}_db.rb"
-    settings.set(:lock, true);
-    puts "get #{__LINE__}:loadScript  #{loadScript}"
-    if not File.exists?(loadScript)
-      $errorMsg =  "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden"
-      redirect '/error'
-    elsif not File.exists?(dumpFile)
-      $errorMsg =  "#{Time.now}: Fehler dumpFile #{dumpFile} nicht vorhanden"
-      redirect '/error'
-    else
-      cmd = "#{loadScript} #{dumpFile}"
-      file = Tempfile.new('loadDatabase')
-      file.puts("#!/bin/bash -v")
-      file.puts(cmd) # Wait till finished
-      file.close
-      File.chmod(0755, file.path)
-      unless settings.batch
-        settings.batch = BatchRunner.new(file.path,
-                                          "#{whichDb}-Datenbank aus Dump #{dumpFile} wieder herstellen",
-                                          "#{whichDb}-Datenbank aus Dump #{dumpFile} erfolgreich wieder hergestellt",
-                                          "#{whichDb}-Datenbank konnte nicht wieder hergestellt werden. Fehler in Dumpfile #{dumpFile}?")
+    @@cockpitMutex.synchronize do
+      puts "get #{__LINE__}: #{request.path_info}: params 0"
+      puts "get #{__LINE__}: #{request.path_info}: params #{params.inspect}"
+      # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
+      whichDb = params[:whichDb]
+      dumpFile = params[:dumpFile]
+      puts "get #{__LINE__}: #{request.path_info} #{params.inspect} whichDb #{whichDb}"
+      loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_config("elexis::db_type")}_load_#{whichDb}_db.rb"
+      settings.set(:lock, true);
+      puts "get #{__LINE__}:loadScript  #{loadScript}"
+      if not File.exists?(loadScript)
+        $errorMsg =  "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden"
+        redirect '/error'
+      elsif not File.exists?(dumpFile)
+        $errorMsg =  "#{Time.now}: Fehler dumpFile #{dumpFile} nicht vorhanden"
+        redirect '/error'
+      else
+        cmd = "#{loadScript} #{dumpFile}"
+        file = Tempfile.new('loadDatabase')
+        file.puts("#!/bin/bash -v")
+        file.puts(cmd) # Wait till finished
+        file.close
+        File.chmod(0755, file.path)
+        unless settings.batch
+          settings.batch = BatchRunner.new(file.path,
+                                            "#{whichDb}-Datenbank aus Dump #{dumpFile} wieder herstellen",
+                                            "#{whichDb}-Datenbank aus Dump #{dumpFile} erfolgreich wieder hergestellt",
+                                            "#{whichDb}-Datenbank konnte nicht wieder hergestellt werden. Fehler in Dumpfile #{dumpFile}?")
+        end
+        @title = settings.batch.title
+        settings.batch.runBatch
       end
-      @title = settings.batch.title
-      settings.batch.runBatch
     end
   end  # start the server if ruby file executed directly
 
@@ -463,26 +474,28 @@ class ElexisCockpit < Sinatra::Base
 
   get '/run_installElexis' do
     puts "get #{__LINE__}: #{request.path_info}: params #{params.inspect}"
+    @@cockpitMutex.synchronize do
 
-    # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
-    unless settings.batch
-      installDir = File.join('/opt', params[:subdir])
-      cmd = "#{Sinatra::ElexisHelpers.get_config('elexis::install_script')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"
-      puts "get #{__LINE__}: #{request.path_info}: cmd ist #{cmd}"
-      settings.set(:batch, nil)
-      settings.set(:lock, true);
-      file = Tempfile.new('installElexis')
-      file.puts("#!/bin/bash -v")
-      file.puts(cmd) # Wait till finished
-      file.close
-      File.chmod(0755, file.path)
-      settings.batch = BatchRunner.new(file.path,
-                                        'Elexis-Version installieren',
-                                        "Elexis-Version installiert in #{installDir}",
-                                        'Fehler bei der Installation von Elexis')
+      # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
+      unless settings.batch
+        installDir = File.join('/opt', params[:subdir])
+        cmd = "#{Sinatra::ElexisHelpers.get_config('elexis::install_script')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"
+        puts "get #{__LINE__}: #{request.path_info}: cmd ist #{cmd}"
+        settings.set(:batch, nil)
+        settings.set(:lock, true);
+        file = Tempfile.new('installElexis')
+        file.puts("#!/bin/bash -v")
+        file.puts(cmd) # Wait till finished
+        file.close
+        File.chmod(0755, file.path)
+        settings.batch = BatchRunner.new(file.path,
+                                          'Elexis-Version installieren',
+                                          "Elexis-Version installiert in #{installDir}",
+                                          'Fehler bei der Installation von Elexis')
+      end
+      @title = settings.batch.title
+      settings.batch.runBatch
     end
-    @title = settings.batch.title
-    settings.batch.runBatch
   end
 
   switchDbServer = BatchRunner.new("elexis::#{Sinatra::ElexisHelpers.get_config("elexis::db_type")}_switch_script",
