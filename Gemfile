@@ -1,4 +1,4 @@
-source "http://rubygems.org"
+source "https://rubygems.org"
 # Is known to work with ruby 1.9.3 and 2.0.0
 gem "sinatra", ">=1.3.5"
 gem "shotgun"

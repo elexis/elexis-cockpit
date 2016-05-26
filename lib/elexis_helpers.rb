@@ -69,13 +69,14 @@ module Sinatra
   def self.get_config(key, default_value = nil)
     local_yaml_db   ||= ENV['COCKPIT_CONFIG']
     local_yaml_db   ||= File.join(File.dirname(File.dirname(__FILE__)), 'local_config.yaml')
+    pillar_yaml = '/etc/pillar.yaml'
     if File.exists?(local_yaml_db)
       config_values = YAML.load_file(local_yaml_db)['local']
       puts "Read #{local_yaml_db}" unless @first
-    else
-      pillar_yaml = '/etc/pillar.yaml'
-      config_values = YAML.load_file(pillar_yaml)['local']
-      puts "Read #{pillar_yaml}" unless @first
+    elsif File.exists?(pillar_yaml)
+        config_values = YAML.load_file(pillar_yaml)['local']
+        puts "Read #{pillar_yaml}" unless @first
+      end
     end
     begin
       cmd = "value = config_values['#{key.gsub('::',"']['")}']"
