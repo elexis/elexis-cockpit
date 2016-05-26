@@ -1,7 +1,7 @@
 ---
 language: ruby
 cache: bundler
-bundler_args: --without test debugger
+bundler_args: --without debugger
 sudo: false
 script: "bundle exec rake spec"
 matrix:
