@@ -11,7 +11,8 @@
           %P DB-Server ist #{@info[:dbServer]}
         - else
           %p Kein DB-Server definiert.
-        - if @info[:dbBackup] %p
+        - if @info[:dbBackup]
+          %p
           %p DB-BackupServer ist #{@info[:dbBackup]}
         - else
           %p Kein DB-BackupServer definiert.
