@@ -97,7 +97,7 @@ require File.join(File.dirname(__FILE__), 'lib', 'elexis_helpers')
 ].each do |key|
   puts "key: #{key} value: #{Sinatra::ElexisHelpers.get_config(key).inspect}"
 end
-exit
+
 class ElexisCockpit < Sinatra::Base
   register Sinatra::ElexisHelpers
   @batch = nil
