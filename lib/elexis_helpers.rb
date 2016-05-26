@@ -74,9 +74,8 @@ module Sinatra
       config_values = YAML.load_file(local_yaml_db)['local']
       puts "Read #{local_yaml_db}" unless @first
     elsif File.exists?(pillar_yaml)
-        config_values = YAML.load_file(pillar_yaml)['local']
-        puts "Read #{pillar_yaml}" unless @first
-      end
+      config_values = YAML.load_file(pillar_yaml)['local']
+      puts "Read #{pillar_yaml}" unless @first
     end
     begin
       cmd = "value = config_values['#{key.gsub('::',"']['")}']"

@@ -2,6 +2,7 @@
 language: ruby
 cache: bundler
 bundler_args: --without test debugger
+sudo: false
 script: "bundle exec rake spec"
 matrix:
   fast_finish: true
