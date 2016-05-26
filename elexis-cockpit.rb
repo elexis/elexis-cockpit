@@ -206,15 +206,15 @@ class ElexisCockpit < Sinatra::Base
           @endTime = Time.now
           @finished = true
         end if not @finished and not @workThread
-        display = "<h3>#{@title}</h3>"
         if @finished
           diffSeconds = (@endTime-@startTime).to_i
-          display += "<h3>Arbeit beendet (nach #{diffSeconds} Sekunden).</h3>"
+          display = "<h3>Arbeit beendet (nach #{diffSeconds} Sekunden).</h3>"
           display += $back2home
           display += @result ? @okMsg : @errMsg
         else
           diffSeconds = (Time.now-@startTime).to_i
-          display += "<h3>Arbeit ist seit #{diffSeconds} Sekunden am laufen.</h3>"
+          display = '<head><meta charset="utf8" http-equiv="refresh" content="1" ></head>'
+          display += "\n<h3>Arbeit ist seit #{diffSeconds} Sekunden am laufen.</h3>"
           display += "<p>Seite neu laden, um zu sehen, ob das Programm weiterhin läuft.</p>"
         end
         content = 'unbekannt. Wahrscheinlich eine Exe-Datei.'
