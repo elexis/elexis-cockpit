@@ -65,9 +65,7 @@
 require 'sinatra'
 require 'sinatra/base'
 require 'data_mapper'
-# require 'builder'
 require 'redcloth'
-require 'hiera'
 require 'socket'
 # to display human readable time difference
 # require 'action_view'
@@ -78,6 +76,28 @@ DataMapper::setup(:default, "sqlite3://#{Dir.pwd}/demo.db")
 
 require File.join(File.dirname(__FILE__), 'lib', 'elexis_helpers')
 
+[
+  'elexis::hd_external_format_and_encrypt',
+  "elexis::db_type",
+  'elexis::install_script',
+  'elexis::hd_external_format_and_encrypt',
+  "server::reboot_script",
+  "server::halt_script",
+  "elexis::db_main",
+  "elexis::db_test",
+  "elexis::db_port",
+  "elexis::db_user",
+  "elexis::backup_server_is",
+  "elexis::mysql_backup_files",
+  "elexis::mysql_main_db_name",
+  "elexis::mysql_tst_db_name",
+  "elexis::pg_backup_files",
+  "elexis::pg_main_db_name",
+  "elexis::pg_tst_db_name",
+].each do |key|
+  puts "key: #{key} value: #{Sinatra::ElexisHelpers.get_config(key).inspect}"
+end
+exit
 class ElexisCockpit < Sinatra::Base
   register Sinatra::ElexisHelpers
   @batch = nil
@@ -211,7 +231,7 @@ class ElexisCockpit < Sinatra::Base
   end
 
   configure do
-    set :port,  9393 # same as shotgun
+    set :port,  9394 # same as shotgun
     # kill other processes waiting on same port
     infos = `lsof -i :22`.split("\n")
     if infos.size > 0
@@ -325,7 +345,7 @@ class ElexisCockpit < Sinatra::Base
     puts "get #{__LINE__}: #{request.path_info}: params #{params}.inspect"
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
-      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_format_and_encrypt')} -init --device #{params[:device]}"
+      cmd = "#{Sinatra::ElexisHelpers.get_config('elexis::hd_external_format_and_encrypt')} -init --device #{params[:device]}"
       file = Tempfile.new('runFormatting')
       file.puts("#!/bin/bash -v")
       file.puts(cmd) # Wait till finished
@@ -394,7 +414,7 @@ class ElexisCockpit < Sinatra::Base
     whichDb = params[:whichDb]
     dumpFile = params[:dumpFile]
     puts "get #{__LINE__}: #{request.path_info} #{params.inspect} whichDb #{whichDb}"
-    loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_hiera("elexis::params::db_type")}_load_#{whichDb}_db.rb"
+    loadScript = "/usr/local/bin/#{Sinatra::ElexisHelpers.get_config("elexis::db_type")}_load_#{whichDb}_db.rb"
     puts "get #{__LINE__}:loadScript  #{loadScript}"
     if not File.exists?(loadScript)
       $errorMsg =  "#{Time.now}: Fehler in der Konfiguration. Script #{loadScript} nicht vorhanden"
@@ -438,7 +458,7 @@ class ElexisCockpit < Sinatra::Base
     # cannot be run using shotgun! Please call it using ruby elexis-cockpit.rub
     unless settings.batch
       installDir = File.join('/opt', params[:subdir])
-      cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::install_script')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"
+      cmd = "#{Sinatra::ElexisHelpers.get_config('elexis::install_script')} #{params[:url]} #{installDir} #{params[:withDemoDB]}"
       puts "get #{__LINE__}: #{request.path_info}: cmd ist #{cmd}"
       settings.set(:batch, nil)
       file = Tempfile.new('installElexis')
@@ -455,13 +475,13 @@ class ElexisCockpit < Sinatra::Base
     settings.batch.runBatch
   end
 
-  switchDbServer = BatchRunner.new("elexis::#{Sinatra::ElexisHelpers.get_hiera("elexis::params::db_type")}_switch_script",
+  switchDbServer = BatchRunner.new("elexis::#{Sinatra::ElexisHelpers.get_config("elexis::db_type")}_switch_script",
                                         'Elexis-Datenbank Server umschalten',
                                         'Elexis-Datenbank Server umgeschalten',
                                         'Fehler beim Umschalten des Elexis-Datenbank Servers')
   switchDbServer.createPages(self, 'switchDbServer')
 
-  cmd = "#{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_format_and_encrypt')} --keyfile #{Sinatra::ElexisHelpers.get_hiera('elexis::hd_external_keyfile')}"
+  cmd = "#{Sinatra::ElexisHelpers.get_config('elexis::hd_external_format_and_encrypt')} --keyfile #{Sinatra::ElexisHelpers.get_config('elexis::hd_external_keyfile')}"
   backup2external = BatchRunner.new(cmd.clone,
                                     'Backup auf verschlüsselte externe Festplatte',
                                     'Backup auf verschlüsselte externe Festplatte erfolgreich',
@@ -469,7 +489,7 @@ class ElexisCockpit < Sinatra::Base
 
   backup2external.createPages(self, 'backup2external')
 
-  cmd = Sinatra::ElexisHelpers.get_hiera("server::reboot_script", '/usr/local/bin/reboot.sh')
+  cmd = Sinatra::ElexisHelpers.get_config("server::reboot_script", '/usr/local/bin/reboot.sh')
   puts "reboot cmd ist #{cmd}"
   reboot = BatchRunner.new(cmd.clone,
                                     'Server neu starten',
@@ -477,7 +497,7 @@ class ElexisCockpit < Sinatra::Base
                                     'Fehler beim Neustarten des Servers')
   reboot.createPages(self, 'reboot')
 
-  cmd  = Sinatra::ElexisHelpers.get_hiera("server::halt_script", '/usr/local/bin/halt.sh')
+  cmd  = Sinatra::ElexisHelpers.get_config("server::halt_script", '/usr/local/bin/halt.sh')
   halt = BatchRunner.new(cmd.clone,
                                     'Server anhalten',
                                     'Server sollte nach 1 Minute anhalten',

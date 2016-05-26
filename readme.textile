@@ -17,4 +17,4 @@ Peter Schönbucher:
 * Ask for confirmation before rebooting server
 * Is a shutdown command necessary? (Niklaus wants to make this a configuration)
 * Protect access to page via password
-
+* Bootstrap Helpers für Prompt benutzebn ? https://github.com/Fullscreen/bh

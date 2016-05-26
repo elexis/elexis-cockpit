@@ -21,6 +21,7 @@
 
 require 'sys/filesystem'
 require 'open-uri'
+require 'pp'
 include Sys
 
 module Sinatra
@@ -31,17 +32,17 @@ module Sinatra
   White  = '#ffffff'
   Versions_URL = 'http://ngiger.dyndns.org/elexis/elexisVersions.yaml'
 
-  # please keep get_elexis_default in sync with elexis::params!
+  # please keep get_elexis_default in sync with pillar values for elexis
   @@db_type = nil
   attr_reader :value
   def self.get_elexis_default(key)
     case key
-      when "elexis::params::db_type"
+      when "elexis::db_type"
         @@db_type = 'mysql'
         return @@db_type
-      when "elexis::params::db_main"
+      when "elexis::db_main"
         return 'elexis'
-      when "elexis::params::db_test"
+      when "elexis::db_test"
         return 'test'
       when /elexis.*_backup_files$/
         if @@db_type == 'mysql'
@@ -51,36 +52,39 @@ module Sinatra
         end
       when /hd_external_keyfile/
         return '/etc/backup.key'
-      when 'elexis::params::db_server'
+      when 'elexis::db_server'
         return 'server'
-      when 'elexis::params::db_backup'
+      when 'elexis::db_backup'
         return 'backup'
-      when 'elexis::params::db_user'
+      when 'elexis::db_user'
         return 'elexis'
-      when 'elexis::params::db_server::backup_server_is'
+      when 'elexis::db_server::backup_server_is'
         return 'backup'
-      when 'elexis::params::db_port'
+      when 'elexis::db_port'
         return 'db_port_default'
       default
         return nil
     end
   end
-
-  def self.get_hiera(key, default_value = nil)
+  def self.get_config(key, default_value = nil)
     local_yaml_db   ||= ENV['COCKPIT_CONFIG']
     local_yaml_db   ||= File.join(File.dirname(File.dirname(__FILE__)), 'local_config.yaml')
     if File.exists?(local_yaml_db)
-      config_values = YAML.load_file(local_yaml_db)
-      value = config_values[key]
-      puts "local config #{local_yaml_db} for #{key} got #{value}" if $VERBOSE
-    elsif defined?(Hiera)
-      hiera_yaml = '/etc/hiera.yaml'
-      scope = '/dev/null'
-      value = Hiera.new(:config => hiera_yaml).lookup(key, nil, scope)
-      puts "#{hiera_yaml}: hiera key #{key} returns #{value}" if $VERBOSE
+      config_values = YAML.load_file(local_yaml_db)['local']
+      puts "Read #{local_yaml_db}" unless @first
+    else
+      pillar_yaml = '/etc/pillar.yaml'
+      config_values = YAML.load_file(pillar_yaml)['local']
+      puts "Read #{pillar_yaml}" unless @first
     end
-    value ||= get_elexis_default(key)
-    puts "#{hiera_yaml} #{__LINE__}: hiera key #{key} default: #{default_value}" unless value
+    begin
+      cmd = "value = config_values['#{key.gsub('::',"']['")}']"
+      eval(cmd)
+    rescue
+      value = get_elexis_default(key)
+    end
+    @first ||= true
+    puts "#{pillar_yaml} #{__LINE__}: pillar key #{key} #{value.inspect} default: #{default_value}" if $VERBOSE & !value
     value ||= default_value
     value
   end
@@ -120,9 +124,9 @@ module Sinatra
     bkpInfo = Hash.new
     maxHours = 24
     maxDays  =  7
-    db_type = get_hiera('elexis::params::db_type', 'mysql')
+    db_type = get_config('elexis::db_type', 'mysql')
     puts "db_type ist #{db_type}"
-    search_path = get_hiera("elexis::#{db_type}_backup_files")
+    search_path = get_config("elexis::#{db_type}_backup_files")
     puts "search_path ist #{search_path}"
     backups =  search_path ? Dir.glob(search_path) : []
     if backups.size == 0 # try default value
@@ -154,12 +158,12 @@ module Sinatra
       end
     end
     bkpPrefix = "/usr/local/bin/#{db_type}"
-    mainDb    = Sinatra::ElexisHelpers.get_hiera("elexis::params::db_main")
-    testDb    = Sinatra::ElexisHelpers.get_hiera("elexis::params::db_test")
+    mainDb    = Sinatra::ElexisHelpers.get_config("elexis::db_main")
+    testDb    = Sinatra::ElexisHelpers.get_config("elexis::db_test")
     bkpInfo[:dump_script] = "#{bkpPrefix}_dump_#{mainDb}.rb"
     bkpInfo[:load_main]   = "#{bkpPrefix}_load_#{mainDb}_db.rb"
     bkpInfo[:load_test]   = "#{bkpPrefix}_load_#{testDb}_db.rb"
-    bkpInfo[:bkp_files]   = get_hiera("elexis::#{get_hiera('elexis::params::db_type')}_backup_files")
+    bkpInfo[:bkp_files]   = get_config("elexis::#{get_config('elexis::db_type')}_backup_files")
     puts "get_db_backup_info #{which_one} returns #{bkpInfo[:dump_script]} #{bkpInfo[:load_main]} #{bkpInfo[:load_test]}"
     return bkpInfo
   end
@@ -211,16 +215,16 @@ module Sinatra
 
   def self.getDbConfiguration
     info = Hash.new
-    info[:backup_server_is]  = get_hiera('elexis::params::db_server::backup_server_is')
-    info[:dbServer] = get_hiera('elexis::params::db_server')
-    info[:dbBackup] = get_hiera('elexis::params::db_backup')
+    info[:backup_server_is]  = get_config('elexis::db_server::backup_server_is')
+    info[:dbServer] = get_config('elexis::db_server')
+    info[:dbBackup] = get_config('elexis::db_backup')
     info[:dbFlavors] = ['h2', 'mysql', 'postgresql' ]
     info[:dbHosts]  = [ 'localhost' ]
     info[:dbHosts] << :server if info[:server]
     info[:dbHosts] << 'backup' if info[:backup]
-    info[:dbPorts]  = [ get_hiera('elexis::params::db_port') ]
-    info[:dbUsers]  = [ get_hiera('elexis::params::db_user')]
-    info[:dbNames]  = [ get_hiera('elexis::params::db_main')]
+    info[:dbPorts]  = [ get_config('elexis::db_port') ]
+    info[:dbUsers]  = [ get_config('elexis::db_user')]
+    info[:dbNames]  = [ get_config('elexis::db_main')]
     info
   end
 
@@ -236,7 +240,7 @@ module Sinatra
 
   def self.getBackupInfo
     backup = Hash.new
-    dbType = get_hiera("elexis::params::db_type")
+    dbType = get_config("elexis::db_type")
     return get_db_backup_info(dbType)
   end
 

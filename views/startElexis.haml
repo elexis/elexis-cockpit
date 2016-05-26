@@ -1,4 +1,4 @@
-- @db_type = Sinatra::ElexisHelpers.get_hiera('elexis::db_type', 'mysql')
+- @db_type = Sinatra::ElexisHelpers.get_config('elexis::db_type', 'mysql')
 %h2 Hier können jede gewünschte Kombination der Elexis-Version, Datenbank und Benutzer starten.
 %br/
 %h3 Bitte Version, Datenbank und Benutzer auswählen.
@@ -18,9 +18,9 @@
                 {:value=>'#{path}'} #{version}
           %td
             %select{:name=>'dbName'}
-              - @main = Sinatra::ElexisHelpers.get_hiera("elexis::#{@db_type}_main_db_name")
+              - @main = Sinatra::ElexisHelpers.get_config("elexis::#{@db_type}_main_db_name")
               %option{:selected => true, :value => "#{@main}" } #{@main}
-              - @tst = Sinatra::ElexisHelpers.get_hiera("elexis::#{@db_type}_tst_db_name")
+              - @tst = Sinatra::ElexisHelpers.get_config("elexis::#{@db_type}_tst_db_name")
               %option{:selected => false, :value => "#{@tst}" } #{@tst}
           %td
             %select{:name=>'dbUser'}

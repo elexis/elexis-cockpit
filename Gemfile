@@ -8,7 +8,6 @@ gem "dm-sqlite-adapter"
 gem "builder"
 gem "RedCloth"
 gem "sys-filesystem"
-gem "hiera"
 
 # I did not find a way to use these packs with Ruby 1.9.2
 # Therefore if you install under Ruby 1.9.2 do so using
@@ -26,4 +25,7 @@ group :test do
   gem 'watir-webdriver'
   gem 'rspec'
   # gem 'capybara' # maybe later
+end
+group 'debugger' do
+  gem 'pry'
 end

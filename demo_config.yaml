@@ -3,10 +3,10 @@
 # If you have MySQL backups named like
 # /home/backup/mysql/mysql_backup_20130310-230501.sql.bz2
 # set the next two lines like
-elexis::params::db_backup_dir: /home/backup
+elexis::db_backup_dir: /home/backup
 elexis::url: Elexis/URL
 # To we use MySQL or Postgres ?
-elexis::params::db_type: mysql
+elexis::db_type: mysql
 
 # Scripts to format and encrypt external HD disk
 elexis::hd_external_format_and_encrypt: /usr/local/bin/backup_encrypted.rb
@@ -41,14 +41,14 @@ elexis::pg_main_db_user:     elexis
 elexis::pg_main_db_password: elexisTest
 
 # Name of first DB-server
-elexis::params::db_server: server_1_green
+elexis::db_server: server_1_green
 
 # Name of second DB-server
-elexis::params::db_backup: server_2_orange
+elexis::db_backup: server_2_orange
 
 # Tell who is the backup DB server (or false) if there is no online backup
-elexis::params::db_server::backup_server_is: server_2_orange
-elexis::params::db_port: 3306
-elexis::params::db_user: elexis
-elexis::params::db_main: elexis
+elexis::db_server::backup_server_is: server_2_orange
+elexis::db_port: 3306
+elexis::db_user: elexis
+elexis::db_main: elexis
 
