@@ -231,7 +231,7 @@ class ElexisCockpit < Sinatra::Base
   end
 
   configure do
-    set :port,  9394 # same as shotgun
+    set :port,  9393 # same as shotgun
     # kill other processes waiting on same port
     infos = `lsof -i :22`.split("\n")
     if infos.size > 0
