@@ -110,7 +110,7 @@ devs_ng =%(
     fqdn = Socket.gethostbyname(Socket.gethostname).first
     if fqdn.match(/giger/i)
       puts "Okay: #{fqdn}"
-      candidates.size.should == 1
+      candidates.size.should == 2
       candidates['/dev/sdc'].should_not be_nil
       candidates['/dev/sdd'].should     be_nil
     else
