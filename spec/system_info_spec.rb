@@ -38,37 +38,37 @@ unused devices: <none>
   end
 
   it "should cope with not existing /proc/mdstat" do
-    RaidInfo.new(mdBadFile).active.should be_nil
-    RaidInfo.new(mdBadFile).degraded.should be_nil
-    RaidInfo.new(mdBadFile).getComponents('x').should be_nil
+    expect(RaidInfo.new(mdBadFile).active).to be_nil
+    expect(RaidInfo.new(mdBadFile).degraded).to be_nil
+    expect(RaidInfo.new(mdBadFile).getComponents('x')).to be_nil
   end
 
   it "should return raw info" do
-    @okay.raw.should == mdstat_okay
+    expect(@okay.raw).to eq(mdstat_okay)
   end
 
   it "return active assemblies" do
-    @okay.active.should     == [ 'md0', 'md1' ]
-    @degraded.active.should == [ 'md0', 'md1' ]
+    expect(@okay.active).to     eq([ 'md0', 'md1' ])
+    expect(@degraded.active).to eq([ 'md0', 'md1' ])
   end
 
   it "return degraded assemblies" do
-    @okay.degraded.should     == []
-    @degraded.degraded.should == ['md0']
+    expect(@okay.degraded).to     eq([])
+    expect(@degraded.degraded).to eq(['md0'])
   end
 
   it "returns components" do
-    @okay.getComponents('md0').should == ['sda1', 'sdb1']
-    @okay.getComponents('md1').should == ['sda2', 'sdb2']
-    @okay.getComponents('md99').should be_nil
+    expect(@okay.getComponents('md0')).to eq(['sda1', 'sdb1'])
+    expect(@okay.getComponents('md1')).to eq(['sda2', 'sdb2'])
+    expect(@okay.getComponents('md99')).to be_nil
   end
 
   it "should return a human readable status" do
-    @okay.human.should          match RaidInfo::OkayPattern
-    @degraded.human.should_not  match RaidInfo::OkayPattern
-    @okay.human.should_not      match RaidInfo::DegradedPattern
-    @degraded.human.should      match RaidInfo::DegradedPattern
-    RaidInfo.new(mdBadFile).human.should match RaidInfo::NoRAID
+    expect(@okay.human).to          match RaidInfo::OkayPattern
+    expect(@degraded.human).not_to  match RaidInfo::OkayPattern
+    expect(@okay.human).not_to      match RaidInfo::DegradedPattern
+    expect(@degraded.human).to      match RaidInfo::DegradedPattern
+    expect(RaidInfo.new(mdBadFile).human).to match RaidInfo::NoRAID
   end
 end
 
@@ -110,9 +110,9 @@ devs_ng =%(
     fqdn = Socket.gethostbyname(Socket.gethostname).first
     if fqdn.match(/giger/i)
       puts "Okay: #{fqdn}"
-      candidates.size.should == 2
-      candidates['/dev/sdc'].should_not be_nil
-      candidates['/dev/sdd'].should     be_nil
+      expect(candidates.size).to eq(2)
+      expect(candidates['/dev/sdc']).not_to be_nil
+      expect(candidates['/dev/sdd']).to     be_nil
     else
       puts "skip running niklaus: #{fqdn}"
     end
@@ -121,9 +121,9 @@ devs_ng =%(
   it "should work at peter schoenbucher place" do
     mounts_sbu = YAML.load_file(File.join(File.dirname(__FILE__), "mounts.sbu"))
     candidates = Sinatra::ElexisHelpers.getPossibleExternalDiskDrives(mounts_sbu, YAML.load(devs_sbu), mdstat_okay)
-    candidates.size.should == 1
-    candidates['/dev/sdc'].should_not be_nil
-    candidates['/dev/sdd'].should     be_nil
+    expect(candidates.size).to eq(1)
+    expect(candidates['/dev/sdc']).not_to be_nil
+    expect(candidates['/dev/sdd']).to     be_nil
   end
 
 end
